@@ -35,21 +35,25 @@ void drawCMSHeader(const std::string &label)
 {
     double y = 0.92;
 
-    // Left: CMS
+    // LEFT block (CMS + Preliminary)
+    double xLeft = 0.05;
+
     TLatex cms;
     cms.SetNDC();
-    cms.SetTextFont(61); // bold CMS
+    cms.SetTextFont(61);
     cms.SetTextSize(0.05);
-    cms.DrawLatex(0.12, y, "CMS");
+    cms.DrawLatex(xLeft, y, "CMS");
 
-    // Next to it: Preliminary (italic style)
     TLatex prelim;
     prelim.SetNDC();
-    prelim.SetTextFont(52); // italic
+    prelim.SetTextFont(52);
     prelim.SetTextSize(0.045);
-    prelim.DrawLatex(0.22, y, "Preliminary");
+    prelim.DrawLatex(xLeft + 0.08, y, "Preliminary");
 
-    // Right side: chamber label
+    // CENTER (optional spacer / could be energy later)
+    // leave empty or add run info later
+
+    // RIGHT block (chamber name)
     TLatex ch;
     ch.SetNDC();
     ch.SetTextFont(42);
