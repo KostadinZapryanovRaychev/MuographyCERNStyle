@@ -31,11 +31,11 @@ void drawCMSPreliminary(double x = 0.15, double y = 0.82)
     prelim.DrawLatex(x, y - 0.05, "Preliminary");
 }
 
-void drawCMSHeader(const std::string &label)
+void drawCMSHeader(const std::string &label, const std::string &energy)
 {
     double y = 0.92;
 
-    // LEFT block (CMS + Preliminary)
+    // ================= LEFT BLOCK =================
     double xLeft = 0.05;
 
     TLatex cms;
@@ -48,18 +48,21 @@ void drawCMSHeader(const std::string &label)
     prelim.SetNDC();
     prelim.SetTextFont(52);
     prelim.SetTextSize(0.045);
-    prelim.DrawLatex(xLeft + 0.08, y, "Preliminary");
+    prelim.DrawLatex(xLeft + 0.07, y, "Preliminary");
 
-    // CENTER (optional spacer / could be energy later)
-    // leave empty or add run info later
+    TLatex energyTxt;
+    energyTxt.SetNDC();
+    energyTxt.SetTextFont(42);
+    energyTxt.SetTextSize(0.04);
+    energyTxt.DrawLatex(xLeft + 0.72, y, energy.c_str());
 
-    // RIGHT block (chamber name)
     TLatex ch;
     ch.SetNDC();
     ch.SetTextFont(42);
     ch.SetTextSize(0.04);
-    ch.SetTextAlign(31); // right aligned
-    ch.DrawLatex(0.95, y, label.c_str());
+    ch.SetTextAlign(22);
+
+    ch.DrawLatex(0.45, 0.93, label.c_str());
 }
 
 std::string sanitizeName(const std::string &name)
@@ -87,9 +90,9 @@ std::string extractChamberName(const std::string &histoName)
 std::string getEnergyLabel(const std::string &year)
 {
     if (year == "2018")
-        return "13 TeV";
+        return "2018 data 13 TeV";
     if (year == "2025")
-        return "13.6 TeV";
+        return "2025 data 13.6 TeV";
     return year + " TeV";
 }
 
@@ -129,7 +132,7 @@ TDirectory *openFileAtPath(const char *filePath, const char *histoPath)
 //     'title' overrides whatever title is stored inside the ROOT file.
 //     Change the title format here whenever you need a different label on the canvas.
 void drawSingleHistogram(TCanvas *c, TH1 *h, const char *drawOpt,
-                         const std::string &label,
+                         const std::string &label, const std::string &year,
                          const std::string &outPath)
 {
     c->cd();
@@ -142,7 +145,7 @@ void drawSingleHistogram(TCanvas *c, TH1 *h, const char *drawOpt,
     h->SetTitle("");
     h->Draw(drawOpt);
 
-    drawCMSHeader(label);
+    drawCMSHeader(label, getEnergyLabel(year));
 
     c->Modified();
     c->Update();
@@ -272,7 +275,7 @@ void processRoll(TKey *keyR, TDirectory *dirC,
     std::string outNameR = outDir + safeName + "_" + sYear1 + ".png";
     std::cout << outNameR << std::endl;
 
-    drawSingleHistogram(cR, hR, "colz", safeName + " (" + sYear1 + " " + "data" + " " + getEnergyLabel(sYear1) + ")", outNameR);
+    drawSingleHistogram(cR, hR, "colz", safeName, sYear1, outNameR);
 
     std::string relRatioTitle = "(Eff(" + sYear1 + ")-Eff(" + sYear2 + "))/(Eff(" + sYear1 + ")+Eff(" + sYear2 + ")) " + safeName;
     TH1F *myRelDiff1D = new TH1F("myRelDiff1D", relRatioTitle.c_str(), 201, -2., +2.);
@@ -284,7 +287,7 @@ void processRoll(TKey *keyR, TDirectory *dirC,
         std::string outNameC = outDir + sanitizeName(extractChamberName(hC->GetName())) + "_" + sYear2 + ".png";
         std::cout << outNameC << std::endl;
 
-        drawSingleHistogram(cC, hC, "COLZ", sanitizeName(extractChamberName(hC->GetName())) + " (" + sYear2 + ")", outNameC);
+        drawSingleHistogram(cC, hC, "COLZ", sanitizeName(extractChamberName(hC->GetName())), sYear2, outNameC);
 
         std::string outPathPng = outDir + safeName + "_" + sVsTag + "_relDiff1D.png";
         std::string outPathC = outDir + safeName + "_" + sVsTag + "_relDiff1D.C";
