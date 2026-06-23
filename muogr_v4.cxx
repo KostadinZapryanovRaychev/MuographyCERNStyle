@@ -80,6 +80,15 @@ std::string extractChamberName(const std::string &histoName)
     return out;
 }
 
+std::string getEnergyLabel(const std::string &year)
+{
+    if (year == "2018")
+        return "13 TeV";
+    if (year == "2025")
+        return "13.6 TeV";
+    return year + " TeV";
+}
+
 std::set<std::string> loadRollNames(const char *rollNamesFile)
 {
     std::set<std::string> chambers;
@@ -121,8 +130,8 @@ void drawSingleHistogram(TCanvas *c, TH1 *h, const char *drawOpt,
 {
     c->cd();
 
-    gStyle->SetOptStat("nemriou");
-    gStyle->SetOptFit(1);
+    // gStyle->SetOptStat("nemriou");
+    // gStyle->SetOptFit(1);
 
     c->SetTopMargin(0.12);
 
@@ -259,7 +268,7 @@ void processRoll(TKey *keyR, TDirectory *dirC,
     std::string outNameR = outDir + safeName + "_" + sYear1 + ".png";
     std::cout << outNameR << std::endl;
 
-    drawSingleHistogram(cR, hR, "colz", safeName + " (" + sYear1 + ")", outNameR);
+    drawSingleHistogram(cR, hR, "colz", safeName + " (" + sYear1 + " " + "data" + " " + getEnergyLabel(sYear1) + ")", outNameR);
 
     std::string relRatioTitle = "(Eff(" + sYear1 + ")-Eff(" + sYear2 + "))/(Eff(" + sYear1 + ")+Eff(" + sYear2 + ")) " + safeName;
     TH1F *myRelDiff1D = new TH1F("myRelDiff1D", relRatioTitle.c_str(), 201, -2., +2.);
@@ -304,6 +313,9 @@ void muogr_v4(const char *fileRef,
     const std::string sYear1 = std::string(year1);
     const std::string sYear2 = std::string(year2);
     const std::string sVsTag = sYear1 + "vs" + sYear2;
+
+    gStyle->SetOptStat(0);
+    gStyle->SetOptFit(0);
 
     if (gSystem->AccessPathName(outDir.c_str()))
         gSystem->mkdir(outDir.c_str(), kTRUE);
