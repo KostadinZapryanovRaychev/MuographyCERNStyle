@@ -14,6 +14,34 @@
 #include "TF1.h"
 #include "TStyle.h"
 #include "TCanvas.h"
+#include "TLatex.h"
+
+void drawCMSPreliminary(double x = 0.15, double y = 0.82)
+{
+    TLatex cms;
+    cms.SetNDC();
+    cms.SetTextFont(61);
+    cms.SetTextSize(0.06);
+    cms.DrawLatex(x, y, "CMS");
+
+    TLatex prelim;
+    prelim.SetNDC();
+    prelim.SetTextFont(52);
+    prelim.SetTextSize(0.045);
+    prelim.DrawLatex(x, y - 0.05, "Preliminary");
+}
+
+void drawCMSHeaderLine(const std::string &label,
+                       double x = 0.12, double y = 0.92)
+{
+    TLatex text;
+    text.SetNDC();
+    text.SetTextFont(62); // bold CMS style
+    text.SetTextSize(0.045);
+
+    std::string full = "CMS Preliminary " + label;
+    text.DrawLatex(x, y, full.c_str());
+}
 
 std::string sanitizeName(const std::string &name)
 {
@@ -73,13 +101,24 @@ TDirectory *openFileAtPath(const char *filePath, const char *histoPath)
 //     'title' overrides whatever title is stored inside the ROOT file.
 //     Change the title format here whenever you need a different label on the canvas.
 void drawSingleHistogram(TCanvas *c, TH1 *h, const char *drawOpt,
-                         const std::string &title, const std::string &outPath)
+                         const std::string &label,
+                         const std::string &outPath)
 {
-    h->SetTitle(title.c_str());
     c->cd();
+
     gStyle->SetOptStat("nemriou");
     gStyle->SetOptFit(1);
+
+    c->SetTopMargin(0.12);
+
+    h->SetTitle("");
     h->Draw(drawOpt);
+
+    drawCMSHeaderLine(label);
+
+    c->Modified();
+    c->Update();
+
     c->SaveAs(outPath.c_str());
 }
 
@@ -276,13 +315,6 @@ void muogr_v4(const char *fileRef,
         std::cerr << "ERROR: no roll names loaded from " << rollNamesFile << std::endl;
         return;
     }
-
-    std::cout << "\n  Reference    (" << sYear1 << ") : " << fileRef << std::endl;
-    std::cout << "  Comparison   (" << sYear2 << ") : " << fileComp << std::endl;
-    std::cout << "  HistoPath                   : " << histoPath << std::endl;
-    std::cout << "  Roll names file             : " << rollNamesFile << std::endl;
-    std::cout << "  Roll names loaded           : " << targetChambers.size() << "\n"
-              << std::endl;
 
     TDirectory *dirR = openFileAtPath(fileRef, histoPath);
     if (!dirR)
