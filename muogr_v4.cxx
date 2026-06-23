@@ -23,14 +23,18 @@ std::string sanitizeName(const std::string &name)
     return s;
 }
 
-// Strips the leading "Muography_" prefix so filenames contain only the chamber name.
-// e.g. "Muography_W-2_RB1in_S07_Backward" → "W-2_RB1in_S07_Backward"
 std::string extractChamberName(const std::string &histoName)
 {
-    const std::string prefix = "Muography_";
-    if (histoName.substr(0, prefix.size()) == prefix)
-        return histoName.substr(prefix.size());
-    return histoName;
+    auto pos = histoName.find('_');
+
+    if (pos == std::string::npos)
+        return histoName;
+
+    std::string out = histoName.substr(pos + 1);
+
+    std::replace(out.begin(), out.end(), '-', 'M');
+
+    return out;
 }
 
 std::set<std::string> loadRollNames(const char *rollNamesFile)
@@ -65,13 +69,13 @@ TDirectory *openFileAtPath(const char *filePath, const char *histoPath)
     return gDirectory;
 }
 
-// =============================================================
-//  DRAWING FUNCTIONS  — add / remove / edit only in this block
-// =============================================================
-
 // [1] Draws a single 2-D efficiency histogram (reference or comparison) and saves it.
-void drawSingleHistogram(TCanvas *c, TH1 *h, const char *drawOpt, const std::string &outPath)
+//     'title' overrides whatever title is stored inside the ROOT file.
+//     Change the title format here whenever you need a different label on the canvas.
+void drawSingleHistogram(TCanvas *c, TH1 *h, const char *drawOpt,
+                         const std::string &title, const std::string &outPath)
 {
+    h->SetTitle(title.c_str());
     c->cd();
     gStyle->SetOptStat("nemriou");
     gStyle->SetOptFit(1);
@@ -96,13 +100,20 @@ void saveRelDiffCanvas(TCanvas *c, const std::string &outPathC, const std::strin
     c->SaveAs(outPathPng.c_str());
 }
 
-// =============================================================
-//  END OF DRAWING FUNCTIONS
-// =============================================================
+// [4] Creates the three working canvases used throughout the run.
+void createCanvases(TCanvas *&cR, TCanvas *&cC, TCanvas *&crelDif)
+{
+    cR = new TCanvas("cR", "cR", 558, 409, 900, 600);
+    cC = new TCanvas("cC", "cC", 558, 409, 900, 600);
+    crelDif = new TCanvas("crelDif", "crelDif", 558, 409, 900, 600);
+}
 
-// ─────────────────────────────────────────────
-//  Computation
-// ─────────────────────────────────────────────
+// [5] Creates the global asymmetry summary histogram shown at the end of the run.
+TH1F *createAsymmetryHistogram(const std::string &sYear1, const std::string &sYear2)
+{
+    std::string title = "Relative assymetry Eff(" + sYear1 + ") vs Eff(" + sYear2 + ")";
+    return new TH1F("hmyAssymetry", title.c_str(), 44, -1.1, 1.1);
+}
 
 void fillRelDiff(TH1 *hR, TH1 *hC, TH1F *hOut, int &countZeros)
 {
@@ -190,12 +201,13 @@ void processRoll(TKey *keyR, TDirectory *dirC,
 
     TH1 *hR = (TH1 *)keyR->ReadObj();
     std::string safeName = sanitizeName(extractChamberName(keyR->GetName()));
+    std::cout << "Processing roll: " << safeName << " → ------------------------------" << safeName << std::endl;
     std::string outNameR = outDir + safeName + "_" + sYear1 + ".png";
     std::cout << outNameR << std::endl;
 
-    drawSingleHistogram(cR, hR, "colz", outNameR);
+    drawSingleHistogram(cR, hR, "colz", safeName + " (" + sYear1 + ")", outNameR);
 
-    std::string relRatioTitle = "(Eff(" + sYear1 + ")-Eff(" + sYear2 + "))/(Eff(" + sYear1 + ")+Eff(" + sYear2 + ")) " + std::string(keyR->GetName());
+    std::string relRatioTitle = "(Eff(" + sYear1 + ")-Eff(" + sYear2 + "))/(Eff(" + sYear1 + ")+Eff(" + sYear2 + ")) " + safeName;
     TH1F *myRelDiff1D = new TH1F("myRelDiff1D", relRatioTitle.c_str(), 201, -2., +2.);
 
     TH1 *hC = (TH1 *)dirC->FindObjectAny(keyR->GetName());
@@ -205,7 +217,7 @@ void processRoll(TKey *keyR, TDirectory *dirC,
         std::string outNameC = outDir + sanitizeName(extractChamberName(hC->GetName())) + "_" + sYear2 + ".png";
         std::cout << outNameC << std::endl;
 
-        drawSingleHistogram(cC, hC, "COLZ", outNameC);
+        drawSingleHistogram(cC, hC, "COLZ", sanitizeName(extractChamberName(hC->GetName())) + " (" + sYear2 + ")", outNameC);
 
         std::string outPathPng = outDir + safeName + "_" + sVsTag + "_relDiff1D.png";
         std::string outPathC = outDir + safeName + "_" + sVsTag + "_relDiff1D.C";
@@ -279,12 +291,9 @@ void muogr_v4(const char *fileRef,
     if (!dirC)
         return;
 
-    TCanvas *cR = new TCanvas("cR", "cR", 558, 409, 900, 600);
-    TCanvas *cC = new TCanvas("cC", "cC", 558, 409, 900, 600);
-    TCanvas *crelDif = new TCanvas("crelDif", "crelDif", 558, 409, 900, 600);
-
-    std::string histTitle = "Relative assymetry Eff(" + sYear1 + ") vs Eff(" + sYear2 + ")";
-    TH1F *hmyAssymetry = new TH1F("hmyAssymetry", histTitle.c_str(), 44, -1.1, 1.1);
+    TCanvas *cR = nullptr, *cC = nullptr, *crelDif = nullptr;
+    createCanvases(cR, cC, crelDif);
+    TH1F *hmyAssymetry = createAsymmetryHistogram(sYear1, sYear2);
 
     TIter iterR(dirR->GetListOfKeys());
     TKey *keyR;
