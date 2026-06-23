@@ -31,16 +31,31 @@ void drawCMSPreliminary(double x = 0.15, double y = 0.82)
     prelim.DrawLatex(x, y - 0.05, "Preliminary");
 }
 
-void drawCMSHeaderLine(const std::string &label,
-                       double x = 0.12, double y = 0.92)
+void drawCMSHeader(const std::string &label)
 {
-    TLatex text;
-    text.SetNDC();
-    text.SetTextFont(62); // bold CMS style
-    text.SetTextSize(0.045);
+    double y = 0.92;
 
-    std::string full = "CMS Preliminary " + label;
-    text.DrawLatex(x, y, full.c_str());
+    // Left: CMS
+    TLatex cms;
+    cms.SetNDC();
+    cms.SetTextFont(61); // bold CMS
+    cms.SetTextSize(0.05);
+    cms.DrawLatex(0.12, y, "CMS");
+
+    // Next to it: Preliminary (italic style)
+    TLatex prelim;
+    prelim.SetNDC();
+    prelim.SetTextFont(52); // italic
+    prelim.SetTextSize(0.045);
+    prelim.DrawLatex(0.22, y, "Preliminary");
+
+    // Right side: chamber label
+    TLatex ch;
+    ch.SetNDC();
+    ch.SetTextFont(42);
+    ch.SetTextSize(0.04);
+    ch.SetTextAlign(31); // right aligned
+    ch.DrawLatex(0.95, y, label.c_str());
 }
 
 std::string sanitizeName(const std::string &name)
@@ -114,7 +129,7 @@ void drawSingleHistogram(TCanvas *c, TH1 *h, const char *drawOpt,
     h->SetTitle("");
     h->Draw(drawOpt);
 
-    drawCMSHeaderLine(label);
+    drawCMSHeader(label);
 
     c->Modified();
     c->Update();
