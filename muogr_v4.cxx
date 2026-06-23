@@ -16,21 +16,6 @@
 #include "TCanvas.h"
 #include "TLatex.h"
 
-void drawCMSPreliminary(double x = 0.15, double y = 0.82)
-{
-    TLatex cms;
-    cms.SetNDC();
-    cms.SetTextFont(61);
-    cms.SetTextSize(0.06);
-    cms.DrawLatex(x, y, "CMS");
-
-    TLatex prelim;
-    prelim.SetNDC();
-    prelim.SetTextFont(52);
-    prelim.SetTextSize(0.045);
-    prelim.DrawLatex(x, y - 0.05, "Preliminary");
-}
-
 void drawCMSHeader(const std::string &label, const std::string &energy)
 {
     double y = 0.92;
