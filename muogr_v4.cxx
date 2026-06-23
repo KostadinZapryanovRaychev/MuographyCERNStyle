@@ -15,6 +15,218 @@
 #include "TStyle.h"
 #include "TCanvas.h"
 
+std::string sanitizeName(const std::string &name)
+{
+    std::string s = name;
+    std::replace(s.begin(), s.end(), '-', 'M');
+    std::replace(s.begin(), s.end(), '+', 'P');
+    return s;
+}
+
+// Strips the leading "Muography_" prefix so filenames contain only the chamber name.
+// e.g. "Muography_W-2_RB1in_S07_Backward" → "W-2_RB1in_S07_Backward"
+std::string extractChamberName(const std::string &histoName)
+{
+    const std::string prefix = "Muography_";
+    if (histoName.substr(0, prefix.size()) == prefix)
+        return histoName.substr(prefix.size());
+    return histoName;
+}
+
+std::set<std::string> loadRollNames(const char *rollNamesFile)
+{
+    std::set<std::string> chambers;
+    std::ifstream ifs(rollNamesFile);
+    std::string line;
+    while (std::getline(ifs, line))
+    {
+        if (line.empty() || line[0] == '#')
+            continue;
+        chambers.insert(line);
+    }
+    ifs.close();
+    return chambers;
+}
+
+TDirectory *openFileAtPath(const char *filePath, const char *histoPath)
+{
+    TFile *f = TFile::Open(filePath);
+    if (!f || f->IsZombie())
+    {
+        std::cerr << "ERROR: could not open file: " << filePath << std::endl;
+        return nullptr;
+    }
+    if (!f->cd(histoPath))
+    {
+        std::cerr << "ERROR: path '" << histoPath << "' not found in: " << filePath << std::endl;
+        f->Close();
+        return nullptr;
+    }
+    return gDirectory;
+}
+
+// =============================================================
+//  DRAWING FUNCTIONS  — add / remove / edit only in this block
+// =============================================================
+
+// [1] Draws a single 2-D efficiency histogram (reference or comparison) and saves it.
+void drawSingleHistogram(TCanvas *c, TH1 *h, const char *drawOpt, const std::string &outPath)
+{
+    c->cd();
+    gStyle->SetOptStat("nemriou");
+    gStyle->SetOptFit(1);
+    h->Draw(drawOpt);
+    c->SaveAs(outPath.c_str());
+}
+
+// [2] Draws the 1-D relative-difference histogram onto the canvas (does not save).
+void drawRelDiff(TCanvas *c, TH1F *h, const std::string & /*outPathPng*/, const std::string & /*outPathC*/)
+{
+    c->cd();
+    gStyle->SetOptStat("eiou");
+    gStyle->SetOptFit(1);
+    h->SetFillColor(kBlue + 1);
+    h->Draw();
+}
+
+// [3] Saves the relative-difference canvas after the Gaussian fit has been drawn on it.
+void saveRelDiffCanvas(TCanvas *c, const std::string &outPathC, const std::string &outPathPng)
+{
+    c->SaveAs(outPathC.c_str());
+    c->SaveAs(outPathPng.c_str());
+}
+
+// =============================================================
+//  END OF DRAWING FUNCTIONS
+// =============================================================
+
+// ─────────────────────────────────────────────
+//  Computation
+// ─────────────────────────────────────────────
+
+void fillRelDiff(TH1 *hR, TH1 *hC, TH1F *hOut, int &countZeros)
+{
+    int xmax = hR->GetXaxis()->GetNbins();
+    int ymax = hR->GetYaxis()->GetNbins();
+    std::cout << "\nnumber of bins = " << xmax << "*" << ymax << " = " << xmax * ymax << std::endl;
+
+    for (int i = 1; i <= xmax; i++)
+    {
+        for (int j = 1; j <= ymax; j++)
+        {
+            double aR = hR->GetBinContent(i, j);
+            double aC = hC->GetBinContent(i, j);
+            if (aR == 0 && aC == 0)
+            {
+                countZeros++;
+                hOut->Fill(-2);
+            }
+            else
+            {
+                hOut->Fill((aR - aC) / (aR + aC));
+            }
+        }
+    }
+}
+
+// Returns true if the fit was performed, filling mean and sigma.
+bool fitRelDiff(TH1F *h, double &mean, double &sigma)
+{
+    int findFitMin = h->GetXaxis()->FindBin(-0.15);
+    int findFitMax = h->GetXaxis()->FindBin(0.15);
+
+    if (h->Integral(findFitMin, findFitMax) == 0)
+    {
+        std::cout << "at least one of the muography is empty and will not fit" << std::endl;
+        return false;
+    }
+
+    TF1 *funcG = new TF1("funcG", "gaus", -0.15, 0.15);
+    funcG->SetLineColor(kRed + 1);
+    funcG->SetLineWidth(3);
+    h->Fit("funcG", "Lre");
+    mean = funcG->GetParameter(1);
+    sigma = funcG->GetParameter(2);
+    std::cout << std::fixed << std::setprecision(5);
+    std::cout << "myMean " << mean << std::endl;
+    std::cout << "mySigma " << sigma << std::endl;
+    delete funcG;
+    return true;
+}
+
+void computeAsymmetry(TH1F *relDiff, TH1F *hmyAssymetry, double &fractionOne)
+{
+    int findOne = relDiff->GetXaxis()->FindBin(1.);
+    int findMOne = relDiff->GetXaxis()->FindBin(-1.);
+    int findZero = relDiff->GetXaxis()->FindBin(0.);
+
+    int entriesAtOne = relDiff->GetBinContent(findOne);
+    double myIntegralNeg = relDiff->Integral(findMOne, findZero - 1);
+    double myIntegralPos = relDiff->Integral(findZero + 1, findOne);
+
+    if ((myIntegralPos + myIntegralNeg) > 0)
+    {
+        double myAssimetry = (myIntegralPos - myIntegralNeg) / (myIntegralPos + myIntegralNeg);
+        hmyAssymetry->Fill(myAssimetry);
+        int allEntries = relDiff->Integral();
+        fractionOne = (entriesAtOne * 100.) / (allEntries * 1.);
+        std::cout << std::fixed << std::setprecision(5);
+        std::cout << "myAssimetry " << myAssimetry << std::endl;
+        std::cout << "fraction at one " << fractionOne << std::endl;
+        std::cout << std::endl;
+    }
+}
+
+void processRoll(TKey *keyR, TDirectory *dirC,
+                 const std::string &outDir,
+                 const std::string &sYear1, const std::string &sYear2,
+                 const std::string &sVsTag,
+                 TCanvas *cR, TCanvas *cC, TCanvas *crelDif,
+                 TH1F *hmyAssymetry)
+{
+    TClass *clR = gROOT->GetClass(keyR->GetClassName());
+    if (!clR || !clR->InheritsFrom("TH1"))
+        return;
+
+    TH1 *hR = (TH1 *)keyR->ReadObj();
+    std::string safeName = sanitizeName(extractChamberName(keyR->GetName()));
+    std::string outNameR = outDir + safeName + "_" + sYear1 + ".png";
+    std::cout << outNameR << std::endl;
+
+    drawSingleHistogram(cR, hR, "colz", outNameR);
+
+    std::string relRatioTitle = "(Eff(" + sYear1 + ")-Eff(" + sYear2 + "))/(Eff(" + sYear1 + ")+Eff(" + sYear2 + ")) " + std::string(keyR->GetName());
+    TH1F *myRelDiff1D = new TH1F("myRelDiff1D", relRatioTitle.c_str(), 201, -2., +2.);
+
+    TH1 *hC = (TH1 *)dirC->FindObjectAny(keyR->GetName());
+
+    if (hC && gROOT->GetClass(hC->ClassName())->InheritsFrom("TH1"))
+    {
+        std::string outNameC = outDir + sanitizeName(extractChamberName(hC->GetName())) + "_" + sYear2 + ".png";
+        std::cout << outNameC << std::endl;
+
+        drawSingleHistogram(cC, hC, "COLZ", outNameC);
+
+        std::string outPathPng = outDir + safeName + "_" + sVsTag + "_relDiff1D.png";
+        std::string outPathC = outDir + safeName + "_" + sVsTag + "_relDiff1D.C";
+
+        int countZeros = 0;
+        fillRelDiff(hR, hC, myRelDiff1D, countZeros);
+
+        drawRelDiff(crelDif, myRelDiff1D, outPathPng, outPathC);
+
+        double myMean = 9., mySigma = 99.;
+        if (fitRelDiff(myRelDiff1D, myMean, mySigma))
+            saveRelDiffCanvas(crelDif, outPathC, outPathPng);
+
+        double fractionOne = 9.;
+        computeAsymmetry(myRelDiff1D, hmyAssymetry, fractionOne);
+    }
+
+    delete hR;
+    delete myRelDiff1D;
+}
+
 void muogr_v4(const char *fileRef,
               const char *fileComp,
               const char *histoPath,
@@ -27,7 +239,6 @@ void muogr_v4(const char *fileRef,
     const std::string sYear2 = std::string(year2);
     const std::string sVsTag = sYear1 + "vs" + sYear2;
 
-    // --- create output directory only if it does not exist ---
     if (gSystem->AccessPathName(outDir.c_str()))
         gSystem->mkdir(outDir.c_str(), kTRUE);
 
@@ -47,17 +258,7 @@ void muogr_v4(const char *fileRef,
         return;
     }
 
-    std::set<std::string> targetChambers;
-    std::ifstream ifs(rollNamesFile);
-    std::string line;
-    while (std::getline(ifs, line))
-    {
-        if (line.empty() || line[0] == '#')
-            continue;
-        targetChambers.insert(line);
-    }
-    ifs.close();
-
+    std::set<std::string> targetChambers = loadRollNames(rollNamesFile);
     if (targetChambers.empty())
     {
         std::cerr << "ERROR: no roll names loaded from " << rollNamesFile << std::endl;
@@ -71,33 +272,12 @@ void muogr_v4(const char *fileRef,
     std::cout << "  Roll names loaded           : " << targetChambers.size() << "\n"
               << std::endl;
 
-    TFile *fileR = TFile::Open(fileRef);
-    if (!fileR || fileR->IsZombie())
-    {
-        std::cerr << "ERROR: could not open reference file: " << fileRef << std::endl;
+    TDirectory *dirR = openFileAtPath(fileRef, histoPath);
+    if (!dirR)
         return;
-    }
-    if (!fileR->cd(histoPath))
-    {
-        std::cerr << "ERROR: path '" << histoPath << "' not found in: " << fileRef << std::endl;
+    TDirectory *dirC = openFileAtPath(fileComp, histoPath);
+    if (!dirC)
         return;
-    }
-    TDirectory *dirR = gDirectory;
-    TIter iterR(dirR->GetListOfKeys());
-    TKey *keyR;
-
-    TFile *fileC = TFile::Open(fileComp);
-    if (!fileC || fileC->IsZombie())
-    {
-        std::cerr << "ERROR: could not open comparison file: " << fileComp << std::endl;
-        return;
-    }
-    if (!fileC->cd(histoPath))
-    {
-        std::cerr << "ERROR: path '" << histoPath << "' not found in: " << fileComp << std::endl;
-        return;
-    }
-    TDirectory *dirC = gDirectory;
 
     TCanvas *cR = new TCanvas("cR", "cR", 558, 409, 900, 600);
     TCanvas *cC = new TCanvas("cC", "cC", 558, 409, 900, 600);
@@ -105,142 +285,22 @@ void muogr_v4(const char *fileRef,
 
     std::string histTitle = "Relative assymetry Eff(" + sYear1 + ") vs Eff(" + sYear2 + ")";
     TH1F *hmyAssymetry = new TH1F("hmyAssymetry", histTitle.c_str(), 44, -1.1, 1.1);
-    double myMean = 9.;
-    double mySigma = 99.;
-    double fractionOne = 9.;
 
+    TIter iterR(dirR->GetListOfKeys());
+    TKey *keyR;
     int myCount = 0;
     while ((keyR = (TKey *)iterR.Next()))
     {
         myCount++;
-
-        TClass *clR = gROOT->GetClass(keyR->GetClassName());
-        if (!clR || !clR->InheritsFrom("TH1"))
-            continue;
-
         if (targetChambers.find(keyR->GetName()) == targetChambers.end())
             continue;
 
-        TH1 *hR = (TH1 *)keyR->ReadObj();
-        std::string outNameR = outDir + std::string(keyR->GetName()) + "_" + sYear1 + ".png";
-        std::replace(outNameR.begin(), outNameR.end(), '-', 'M');
-        std::replace(outNameR.begin(), outNameR.end(), '+', 'P');
-        std::string strforCompR = std::string(keyR->GetName());
-        std::replace(strforCompR.begin(), strforCompR.end(), '-', 'M');
-        std::replace(strforCompR.begin(), strforCompR.end(), '+', 'P');
-        std::cout << outNameR.c_str() << std::endl;
-        cR->cd();
-        gStyle->SetOptStat("nemriou");
-        gStyle->SetOptFit(1);
-        hR->Draw("colz");
-        cR->SaveAs(outNameR.c_str());
-        int countZeros = 0;
-
-        std::string relRatioTitle = "(Eff(" + sYear1 + ")-Eff(" + sYear2 + "))/(Eff(" + sYear1 + ")+Eff(" + sYear2 + ")) " + std::string(keyR->GetName());
-        TH1F *myRelDiff1D = new TH1F("myRelDiff1D", relRatioTitle.c_str(), 201, -2., +2.);
-
-        TH1 *hC = (TH1 *)dirC->FindObjectAny(keyR->GetName());
-
-        if (hC && gROOT->GetClass(hC->ClassName())->InheritsFrom("TH1"))
-        {
-            std::string outNameC = outDir + std::string(hC->GetName()) + "_" + sYear2 + ".png";
-            std::replace(outNameC.begin(), outNameC.end(), '-', 'M');
-            std::replace(outNameC.begin(), outNameC.end(), '+', 'P');
-
-            myMean = 9.;
-            mySigma = 99.;
-            fractionOne = 9.;
-            std::cout << outNameC.c_str() << std::endl;
-            cC->cd();
-            hC->Draw("COLZ");
-            cC->SaveAs(outNameC.c_str());
-
-            std::string outNameRelRatio1Dpng = outDir + strforCompR + "_" + sVsTag + "_relDiff1D.png";
-            std::string outNameRelRatio1D = outDir + strforCompR + "_" + sVsTag + "_relDiff1D.C";
-
-            crelDif->cd();
-            int xmax = hR->GetXaxis()->GetNbins();
-            int ymax = hR->GetYaxis()->GetNbins();
-            std::cout << "\nnumber of bins = " << xmax << "*" << ymax << " = " << xmax * ymax << std::endl;
-            double rel = 99.;
-            double aR = -1;
-            double aC = -1;
-
-            for (int i = 1; i <= xmax; i++)
-            {
-                for (int j = 1; j <= ymax; j++)
-                {
-                    aR = hR->GetBinContent(i, j);
-                    aC = hC->GetBinContent(i, j);
-                    if (aR == 0 && aC == 0)
-                    {
-                        countZeros++;
-                        myRelDiff1D->Fill(-2);
-                    }
-                    else
-                    {
-                        rel = (aR - aC) / (aR + aC);
-                        myRelDiff1D->Fill(rel);
-                    }
-                }
-            }
-
-            gStyle->SetOptStat("eiou");
-            gStyle->SetOptFit(1);
-            myRelDiff1D->SetFillColor(kBlue + 1);
-            myRelDiff1D->Draw();
-
-            int findFitMin = myRelDiff1D->GetXaxis()->FindBin(-0.15);
-            int findFitMax = myRelDiff1D->GetXaxis()->FindBin(0.15);
-
-            if (myRelDiff1D->Integral(findFitMin, findFitMax) == 0)
-            {
-                std::cout << "at least one of the muography is empty and will not fit" << std::endl;
-            }
-            else
-            {
-                TF1 *funcG = new TF1("funcG", "gaus", -0.15, 0.15);
-                funcG->SetLineColor(kRed + 1);
-                funcG->SetLineWidth(3);
-                myRelDiff1D->Fit("funcG", "Lre");
-                crelDif->SaveAs(outNameRelRatio1D.c_str());
-                crelDif->SaveAs(outNameRelRatio1Dpng.c_str());
-                myMean = funcG->GetParameter(1);
-                mySigma = funcG->GetParameter(2);
-                std::cout << std::fixed << std::setprecision(5);
-                std::cout << "myMean " << myMean << std::endl;
-                std::cout << "mySigma " << mySigma << std::endl;
-                delete funcG;
-            }
-
-            int findOne = myRelDiff1D->GetXaxis()->FindBin(1.);
-            int findMOne = myRelDiff1D->GetXaxis()->FindBin(-1.);
-            int findZero = myRelDiff1D->GetXaxis()->FindBin(0.);
-
-            int entriesAtOne = myRelDiff1D->GetBinContent(findOne);
-
-            double myIntegralNegative = myRelDiff1D->Integral(findMOne, findZero - 1);
-            double myIntegralpositive = myRelDiff1D->Integral(findZero + 1, findOne);
-
-            if ((myIntegralpositive + myIntegralNegative) > 0)
-            {
-                double myAssimetry = (myIntegralpositive - myIntegralNegative) / (myIntegralpositive + myIntegralNegative);
-                hmyAssymetry->Fill(myAssimetry);
-                int allEntries = myRelDiff1D->Integral();
-                fractionOne = (entriesAtOne * 100.) / (allEntries * 1.);
-                std::cout << std::fixed << std::setprecision(5);
-                std::cout << "myAssimetry " << myAssimetry << std::endl;
-                std::cout << "fraction at one " << fractionOne << std::endl;
-                std::cout << std::endl;
-            }
-        }
-
-        delete hR;
-        delete myRelDiff1D;
+        processRoll(keyR, dirC, outDir, sYear1, sYear2, sVsTag,
+                    cR, cC, crelDif, hmyAssymetry);
     }
 
-    fileR->Close();
-    fileC->Close();
+    dirR->GetFile()->Close();
+    dirC->GetFile()->Close();
 
     delete cR;
     delete cC;
