@@ -19,6 +19,7 @@
 #include "TStyle.h"
 #include "TCanvas.h"
 #include "TLatex.h"
+#include "TPaveStats.h"
 
 void setStats(TH1 *h, bool enable)
 {
@@ -35,7 +36,7 @@ void drawSingleHistogram(TCanvas *c,
 {
     c->cd();
 
-    h->SetStats(false); // keep default: OFF for normal plots
+    h->SetStats(false);
 
     c->SetTopMargin(0.12);
 
@@ -57,11 +58,21 @@ void drawRelDiff(TCanvas *c, TH1F *h,
     c->cd();
 
     h->SetStats(true);
-    gPad->Update(); // 🔥 IMPORTANT ROOT FIX
-
     h->SetFillColor(kBlue + 1);
 
     h->Draw();
+
+    c->Update();
+
+    TPaveStats *st = (TPaveStats *)h->FindObject("stats");
+
+    if (st)
+    {
+        st->SetX1NDC(0.70);
+        st->SetX2NDC(0.90);
+        st->SetY1NDC(0.55);
+        st->SetY2NDC(0.75);
+    }
 
     std::string label = "2018 vs 2025 data";
     drawCMSPreliminaryOverlay(label);
@@ -69,6 +80,7 @@ void drawRelDiff(TCanvas *c, TH1F *h,
     c->Modified();
     c->Update();
 }
+
 void saveRelDiffCanvas(TCanvas *c,
                        const std::string &outPathC,
                        const std::string &outPathPng)
