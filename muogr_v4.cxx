@@ -20,12 +20,6 @@
 #include "TCanvas.h"
 #include "TLatex.h"
 
-std::string buildAsymmetryTitle(const std::string &sYear1,
-                                const std::string &sYear2)
-{
-    return "Relative asymmetry Eff(" + sYear1 + ") vs Eff(" + sYear2 + ")";
-}
-
 void setStats(TH1 *h, bool enable)
 {
     if (h)

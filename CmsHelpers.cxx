@@ -133,3 +133,9 @@ TDirectory *openFileAtPath(const char *filePath, const char *histoPath)
     }
     return gDirectory;
 }
+
+std::string buildAsymmetryTitle(const std::string &sYear1,
+                                const std::string &sYear2)
+{
+    return "Relative asymmetry Eff(" + sYear1 + ") vs Eff(" + sYear2 + ")";
+}
