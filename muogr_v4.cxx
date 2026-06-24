@@ -1,5 +1,6 @@
 #include "CmsHelpers.h"
 #include "CmsHelpers.cxx"
+
 #include <stdio.h>
 #include <string>
 #include <algorithm>
@@ -7,6 +8,7 @@
 #include <iomanip>
 #include <fstream>
 #include <set>
+
 #include "TROOT.h"
 #include "TFile.h"
 #include "TKey.h"
@@ -24,22 +26,22 @@ std::string buildAsymmetryTitle(const std::string &sYear1,
     return "Relative asymmetry Eff(" + sYear1 + ") vs Eff(" + sYear2 + ")";
 }
 
-void configureAsymmetryHistStyle(bool showStats = true)
+void setStats(TH1 *h, bool enable)
 {
-    gStyle->SetOptStat(showStats ? 1 : 0);
+    if (h)
+        h->SetStats(enable);
 }
 
-// [1] Draws a single 2-D efficiency histogram (reference or comparison) and saves it.
-//     'title' overrides whatever title is stored inside the ROOT file.
-//     Change the title format here whenever you need a different label on the canvas.
-void drawSingleHistogram(TCanvas *c, TH1 *h, const char *drawOpt,
-                         const std::string &label, const std::string &year,
+void drawSingleHistogram(TCanvas *c,
+                         TH1 *h,
+                         const char *drawOpt,
+                         const std::string &label,
+                         const std::string &year,
                          const std::string &outPath)
 {
     c->cd();
 
-    gStyle->SetOptStat(0);
-    gStyle->SetOptFit(0);
+    h->SetStats(false); // keep default: OFF for normal plots
 
     c->SetTopMargin(0.12);
 
@@ -55,15 +57,16 @@ void drawSingleHistogram(TCanvas *c, TH1 *h, const char *drawOpt,
 }
 
 void drawRelDiff(TCanvas *c, TH1F *h,
-                 const std::string & /*outPathPng*/,
-                 const std::string & /*outPathC*/)
+                 const std::string &,
+                 const std::string &)
 {
     c->cd();
 
-    gStyle->SetOptStat("eiou");
-    gStyle->SetOptFit(1);
+    h->SetStats(true);
+    gPad->Update(); // 🔥 IMPORTANT ROOT FIX
 
     h->SetFillColor(kBlue + 1);
+
     h->Draw();
 
     std::string label = "2018 vs 2025 data";
@@ -72,15 +75,14 @@ void drawRelDiff(TCanvas *c, TH1F *h,
     c->Modified();
     c->Update();
 }
-
-// [3] Saves the relative-difference canvas after the Gaussian fit has been drawn on it.
-void saveRelDiffCanvas(TCanvas *c, const std::string &outPathC, const std::string &outPathPng)
+void saveRelDiffCanvas(TCanvas *c,
+                       const std::string &outPathC,
+                       const std::string &outPathPng)
 {
     c->SaveAs(outPathC.c_str());
     c->SaveAs(outPathPng.c_str());
 }
 
-// [4] Creates the three working canvases used throughout the run.
 void createCanvases(TCanvas *&cR, TCanvas *&cC, TCanvas *&crelDif)
 {
     cR = new TCanvas("cR", "cR", 558, 409, 900, 600);
@@ -88,19 +90,19 @@ void createCanvases(TCanvas *&cR, TCanvas *&cC, TCanvas *&crelDif)
     crelDif = new TCanvas("crelDif", "crelDif", 558, 409, 900, 600);
 }
 
-TH1F *createAsymmetryHistogram(const std::string &sYear1, const std::string &sYear2)
+TH1F *createAsymmetryHistogram(const std::string &sYear1,
+                               const std::string &sYear2)
 {
     std::string title = buildAsymmetryTitle(sYear1, sYear2);
-    TH1F *hmyAssymetry = new TH1F("hmyAssymetry", title.c_str(), 100, -1., +1.);
-    configureAsymmetryHistStyle();
-    return hmyAssymetry;
+    TH1F *h = new TH1F("hmyAssymetry", title.c_str(), 100, -1., +1.);
+    setStats(h, true);
+    return h;
 }
 
 void fillRelDiff(TH1 *hR, TH1 *hC, TH1F *hOut, int &countZeros)
 {
     int xmax = hR->GetXaxis()->GetNbins();
     int ymax = hR->GetYaxis()->GetNbins();
-    std::cout << "\nnumber of bins = " << xmax << "*" << ymax << " = " << xmax * ymax << std::endl;
 
     for (int i = 1; i <= xmax; i++)
     {
@@ -108,6 +110,7 @@ void fillRelDiff(TH1 *hR, TH1 *hC, TH1F *hOut, int &countZeros)
         {
             double aR = hR->GetBinContent(i, j);
             double aC = hC->GetBinContent(i, j);
+
             if (aR == 0 && aC == 0)
             {
                 countZeros++;
@@ -135,23 +138,30 @@ bool fitRelDiff(TH1F *h, double &mean, double &sigma)
     TF1 *funcG = new TF1("funcG", "gaus", -0.15, 0.15);
     funcG->SetLineColor(kRed + 1);
     funcG->SetLineWidth(3);
+
     h->Fit("funcG", "Lre");
+
     mean = funcG->GetParameter(1);
     sigma = funcG->GetParameter(2);
+
     std::cout << std::fixed << std::setprecision(5);
     std::cout << "myMean " << mean << std::endl;
     std::cout << "mySigma " << sigma << std::endl;
+
     delete funcG;
     return true;
 }
 
-void computeAsymmetry(TH1F *relDiff, TH1F *hmyAssymetry, double &fractionOne)
+void computeAsymmetry(TH1F *relDiff,
+                      TH1F *hmyAssymetry,
+                      double &fractionOne)
 {
     int findOne = relDiff->GetXaxis()->FindBin(1.);
     int findMOne = relDiff->GetXaxis()->FindBin(-1.);
     int findZero = relDiff->GetXaxis()->FindBin(0.);
 
     int entriesAtOne = relDiff->GetBinContent(findOne);
+
     double myIntegralNeg = relDiff->Integral(findMOne, findZero - 1);
     double myIntegralPos = relDiff->Integral(findZero + 1, findOne);
 
@@ -159,12 +169,9 @@ void computeAsymmetry(TH1F *relDiff, TH1F *hmyAssymetry, double &fractionOne)
     {
         double myAssimetry = (myIntegralPos - myIntegralNeg) / (myIntegralPos + myIntegralNeg);
         hmyAssymetry->Fill(myAssimetry);
+
         int allEntries = relDiff->Integral();
-        fractionOne = (entriesAtOne * 100.) / (allEntries * 1.);
-        std::cout << std::fixed << std::setprecision(5);
-        std::cout << "myAssimetry " << myAssimetry << std::endl;
-        std::cout << "fraction at one " << fractionOne << std::endl;
-        std::cout << std::endl;
+        fractionOne = (entriesAtOne * 100.) / allEntries;
     }
 }
 
@@ -180,23 +187,27 @@ void processRoll(TKey *keyR, TDirectory *dirC,
         return;
 
     TH1 *hR = (TH1 *)keyR->ReadObj();
-    std::string safeName = sanitizeName(extractChamberName(keyR->GetName()));
-    std::cout << "Processing roll: " << safeName << " → ------------------------------" << safeName << std::endl;
-    std::string outNameR = outDir + safeName + "_" + sYear1 + ".png";
 
+    std::string safeName = sanitizeName(extractChamberName(keyR->GetName()));
+
+    std::string outNameR = outDir + safeName + "_" + sYear1 + ".png";
     drawSingleHistogram(cR, hR, "colz", safeName, sYear1, outNameR);
 
-    std::string relRatioTitle = "(Eff(" + sYear1 + ")-Eff(" + sYear2 + "))/(Eff(" + sYear1 + ")+Eff(" + sYear2 + ")) " + safeName;
+    std::string relRatioTitle =
+        "(Eff(" + sYear1 + ")-Eff(" + sYear2 + "))/(Eff(" + sYear1 + ")+Eff(" + sYear2 + ")) " + safeName;
+
     TH1F *myRelDiff1D = new TH1F("myRelDiff1D", relRatioTitle.c_str(), 201, -2., +2.);
 
     TH1 *hC = (TH1 *)dirC->FindObjectAny(keyR->GetName());
 
     if (hC && gROOT->GetClass(hC->ClassName())->InheritsFrom("TH1"))
     {
-        std::string outNameC = outDir + sanitizeName(extractChamberName(hC->GetName())) + "_" + sYear2 + ".png";
-        std::cout << outNameC << std::endl;
+        std::string outNameC =
+            outDir + sanitizeName(extractChamberName(hC->GetName())) + "_" + sYear2 + ".png";
 
-        drawSingleHistogram(cC, hC, "COLZ", sanitizeName(extractChamberName(hC->GetName())), sYear2, outNameC);
+        drawSingleHistogram(cC, hC, "COLZ",
+                            sanitizeName(extractChamberName(hC->GetName())),
+                            sYear2, outNameC);
 
         std::string outPathPng = outDir + safeName + "_" + sVsTag + "_relDiff1D.png";
         std::string outPathC = outDir + safeName + "_" + sVsTag + "_relDiff1D.C";
@@ -204,7 +215,10 @@ void processRoll(TKey *keyR, TDirectory *dirC,
         int countZeros = 0;
         fillRelDiff(hR, hC, myRelDiff1D, countZeros);
 
-        drawRelDiff(crelDif, myRelDiff1D, outPathPng, outPathC);
+        drawRelDiff(crelDif,
+                    myRelDiff1D,
+                    outPathPng,
+                    outPathC);
 
         double myMean = 9., mySigma = 99.;
         if (fitRelDiff(myRelDiff1D, myMean, mySigma))
