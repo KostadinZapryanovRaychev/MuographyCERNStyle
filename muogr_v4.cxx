@@ -50,6 +50,38 @@ void drawCMSHeader(const std::string &label, const std::string &energy)
     ch.DrawLatex(0.45, 0.93, label.c_str());
 }
 
+void drawCMSPreliminaryOverlay(const std::string &yearLabel,
+                               double xCMS = 0.12,
+                               double xPre = 0.20,
+                               double xData = 0.12,
+                               double y = 0.80)
+{
+    TLatex cms;
+    cms.SetNDC();
+    cms.SetTextFont(61);
+    cms.SetTextSize(0.05);
+    cms.DrawLatex(xCMS, y, "CMS");
+
+    TLatex prelim;
+    prelim.SetNDC();
+    prelim.SetTextFont(52);
+    prelim.SetTextSize(0.04);
+    prelim.DrawLatex(xPre, y, "Preliminary");
+
+    TLatex data;
+    data.SetNDC();
+    data.SetTextFont(42);
+    data.SetTextSize(0.035);
+    data.DrawLatex(xData, y - 0.06, yearLabel.c_str());
+
+    TLatex energy;
+    energy.SetNDC();
+    energy.SetTextFont(45);
+    energy.SetTextSize(0.04);
+    energy.SetTextAlign(42);
+    energy.DrawLatex(0.95, y, "13 TeV - 13.6 TeV");
+}
+
 std::string sanitizeName(const std::string &name)
 {
     std::string s = name;
@@ -75,9 +107,9 @@ std::string extractChamberName(const std::string &histoName)
 std::string getEnergyLabel(const std::string &year)
 {
     if (year == "2018")
-        return "2018 data 13 TeV";
+        return "2018 data (13 TeV)";
     if (year == "2025")
-        return "2025 data 13.6 TeV";
+        return "2025 data (13.6 TeV)";
     return year + " TeV";
 }
 
@@ -122,8 +154,8 @@ void drawSingleHistogram(TCanvas *c, TH1 *h, const char *drawOpt,
 {
     c->cd();
 
-    // gStyle->SetOptStat("nemriou");
-    // gStyle->SetOptFit(1);
+    gStyle->SetOptStat(0);
+    gStyle->SetOptFit(0);
 
     c->SetTopMargin(0.12);
 
@@ -138,14 +170,23 @@ void drawSingleHistogram(TCanvas *c, TH1 *h, const char *drawOpt,
     c->SaveAs(outPath.c_str());
 }
 
-// [2] Draws the 1-D relative-difference histogram onto the canvas (does not save).
-void drawRelDiff(TCanvas *c, TH1F *h, const std::string & /*outPathPng*/, const std::string & /*outPathC*/)
+void drawRelDiff(TCanvas *c, TH1F *h,
+                 const std::string & /*outPathPng*/,
+                 const std::string & /*outPathC*/)
 {
     c->cd();
+
     gStyle->SetOptStat("eiou");
     gStyle->SetOptFit(1);
+
     h->SetFillColor(kBlue + 1);
     h->Draw();
+
+    std::string label = "2018 vs 2025 data";
+    drawCMSPreliminaryOverlay(label);
+
+    c->Modified();
+    c->Update();
 }
 
 // [3] Saves the relative-difference canvas after the Gaussian fit has been drawn on it.
@@ -163,7 +204,6 @@ void createCanvases(TCanvas *&cR, TCanvas *&cC, TCanvas *&crelDif)
     crelDif = new TCanvas("crelDif", "crelDif", 558, 409, 900, 600);
 }
 
-// [5] Creates the global asymmetry summary histogram shown at the end of the run.
 TH1F *createAsymmetryHistogram(const std::string &sYear1, const std::string &sYear2)
 {
     std::string title = "Relative assymetry Eff(" + sYear1 + ") vs Eff(" + sYear2 + ")";
@@ -195,7 +235,6 @@ void fillRelDiff(TH1 *hR, TH1 *hC, TH1F *hOut, int &countZeros)
     }
 }
 
-// Returns true if the fit was performed, filling mean and sigma.
 bool fitRelDiff(TH1F *h, double &mean, double &sigma)
 {
     int findFitMin = h->GetXaxis()->FindBin(-0.15);
@@ -258,7 +297,6 @@ void processRoll(TKey *keyR, TDirectory *dirC,
     std::string safeName = sanitizeName(extractChamberName(keyR->GetName()));
     std::cout << "Processing roll: " << safeName << " → ------------------------------" << safeName << std::endl;
     std::string outNameR = outDir + safeName + "_" + sYear1 + ".png";
-    std::cout << outNameR << std::endl;
 
     drawSingleHistogram(cR, hR, "colz", safeName, sYear1, outNameR);
 
@@ -306,8 +344,8 @@ void muogr_v4(const char *fileRef,
     const std::string sYear2 = std::string(year2);
     const std::string sVsTag = sYear1 + "vs" + sYear2;
 
-    gStyle->SetOptStat(0);
-    gStyle->SetOptFit(0);
+    // gStyle->SetOptStat(0);
+    // gStyle->SetOptFit(0);
 
     if (gSystem->AccessPathName(outDir.c_str()))
         gSystem->mkdir(outDir.c_str(), kTRUE);
