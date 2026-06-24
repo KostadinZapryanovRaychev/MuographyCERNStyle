@@ -66,7 +66,7 @@ void drawCMSPreliminaryOverlay(
     energy.SetTextFont(42);
     energy.SetTextSize(0.04);
     energy.SetTextAlign(32);
-    energy.DrawLatex(0.95, y, "13 TeV - 13.6 TeV");
+    energy.DrawLatex(0.90, y, "(13 TeV - 13.6 TeV)");
 }
 
 std::string getEnergyLabel(const std::string &year)
