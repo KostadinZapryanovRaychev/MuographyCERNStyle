@@ -45,6 +45,10 @@ void drawSingleHistogram(TCanvas *c,
 
     drawCMSHeader(label, getEnergyLabel(year));
 
+    drawEfficiencyCaption(
+        "Muon efficiency map:",
+        "Comparison between 2018 and 2025 RPC efficiencies");
+
     c->Modified();
     c->Update();
 

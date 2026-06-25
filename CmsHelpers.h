@@ -27,4 +27,7 @@ TDirectory *openFileAtPath(const char *filePath, const char *histoPath);
 std::string buildAsymmetryTitle(const std::string &sYear1,
                                 const std::string &sYear2);
 
+void drawEfficiencyCaption(const std::string &title,
+                           const std::string &description);
+
 #endif

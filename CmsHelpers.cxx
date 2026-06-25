@@ -139,3 +139,24 @@ std::string buildAsymmetryTitle(const std::string &sYear1,
 {
     return "Relative asymmetry Eff(" + sYear1 + ") vs Eff(" + sYear2 + ")";
 }
+
+void drawEfficiencyCaption(const std::string &title,
+                           const std::string &description)
+{
+    TPaveText *pt =
+        new TPaveText(0.05, 0.01, 0.95, 0.09, "NDC");
+
+    pt->SetBorderSize(1);
+    pt->SetLineColor(kGray + 1);
+
+    pt->SetFillColor(38);
+    pt->SetFillStyle(3001);
+
+    pt->SetTextAlign(12);
+    pt->SetTextFont(42);
+    pt->SetTextSize(0.028);
+
+    pt->AddText((std::string("#bf{") + title + "} " + description).c_str());
+
+    pt->Draw();
+}
