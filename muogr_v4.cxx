@@ -44,10 +44,11 @@ void drawSingleHistogram(TCanvas *c,
     h->Draw(drawOpt);
 
     drawCMSHeader(label, getEnergyLabel(year));
+    c->SetBottomMargin(0.18);
 
-    drawEfficiencyCaption(
-        "Muon efficiency map:",
-        "Comparison between 2018 and 2025 RPC efficiencies");
+    // drawEfficiencyCaption(
+    //     "Muon efficiency map:",
+    //     "Comparison between 2018 and 2025 RPC efficiencies");
 
     c->Modified();
     c->Update();
@@ -65,6 +66,12 @@ void drawRelDiff(TCanvas *c, TH1F *h,
     h->SetFillColor(kBlue + 1);
 
     h->Draw();
+
+    c->SetBottomMargin(0.18);
+
+    // drawEfficiencyCaption(
+    //     "Muon efficiency map 2 :",
+    //     "Comparison between 2018 and 2025 RPC efficiencies Trying to fit caption 2 TEST");
 
     c->Update();
 

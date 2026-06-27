@@ -143,8 +143,39 @@ std::string buildAsymmetryTitle(const std::string &sYear1,
 void drawEfficiencyCaption(const std::string &title,
                            const std::string &description)
 {
+    const double left = 0.05;
+    const double right = 0.95;
+    const double bottom = 0.01;
+    const double top = 0.09;
+
     TPaveText *pt =
-        new TPaveText(0.05, 0.01, 0.95, 0.09, "NDC");
+        new TPaveText(left, bottom, right, top, "NDC");
+
+    pt->SetBorderSize(1);
+    pt->SetLineColor(kGray + 1);
+
+    pt->SetFillColor(38);
+    pt->SetFillStyle(3001);
+
+    pt->SetTextAlign(12);
+    pt->SetTextFont(42);
+    pt->SetTextSize(0.028);
+
+    pt->AddText((std::string("#bf{") + title + "} " + description).c_str());
+
+    pt->Draw();
+}
+
+void drawEfficiencyCaption2(const std::string &title,
+                            const std::string &description)
+{
+    const double left = 0.05;
+    const double right = 0.95;
+    const double bottom = 0.01;
+    const double top = 0.09;
+
+    TPaveText *pt =
+        new TPaveText(left, bottom, right, top, "NDC");
 
     pt->SetBorderSize(1);
     pt->SetLineColor(kGray + 1);
