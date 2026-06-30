@@ -44,7 +44,7 @@ void drawSingleHistogram(TCanvas *c,
     h->Draw(drawOpt);
 
     drawCMSHeader(label, getEnergyLabel(year));
-    c->SetBottomMargin(0.18);
+    // c->SetBottomMargin(0.18);
 
     // drawEfficiencyCaption(
     //     "Muon efficiency map:",
@@ -67,7 +67,7 @@ void drawRelDiff(TCanvas *c, TH1F *h,
 
     h->Draw();
 
-    c->SetBottomMargin(0.18);
+    // c->SetBottomMargin(0.18);
 
     // drawEfficiencyCaption(
     //     "Muon efficiency map 2 :",
