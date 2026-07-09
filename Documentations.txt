@@ -1702,10 +1702,8 @@ W-2_RB4-_S10\
 \
 \pard\pardeftab720\partightenfactor0
 
-\f0\fs28 \cf2 \cb3 root -l -b -q 'muogr_v2.cxx("AnalyzeEfficiency_321475_325172_RPCMon_2018D.root", "AnalyzeEfficiency_396805_397817_RPCMon2025F.root", "Muogr", "2018", "2025", "rollNames.txt")'\
-\
-\
-\
+root -l -b -q 'muogr_v4.cxx("files/AnalyzeEfficiency_321475_325172_RPCMon_2018D.root", "files/AnalyzeEfficiency_396805_397817_RPCMon2025F.root", "Muogr", "2018", "2025", "rollNames.txt")'
+
 \pard\pardeftab720\partightenfactor0
 
 \f3\fs30 \cf7 \cb5 \
