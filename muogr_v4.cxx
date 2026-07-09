@@ -21,6 +21,21 @@
 #include "TLatex.h"
 #include "TPaveStats.h"
 
+void saveHistogramCanvas(TCanvas *c,
+                         const std::string &outPathC,
+                         const std::string &outPathPng)
+{
+    c->SaveAs(outPathC.c_str());
+    c->SaveAs(outPathPng.c_str());
+}
+
+void saveHistogramRoot(TH1 *h, const std::string &outPath)
+{
+    TFile f(outPath.c_str(), "RECREATE");
+    h->Write();
+    f.Close();
+}
+
 void setStats(TH1 *h, bool enable)
 {
     if (h)
@@ -39,9 +54,19 @@ void drawSingleHistogram(TCanvas *c,
     h->SetStats(false);
 
     c->SetTopMargin(0.12);
+    c->SetRightMargin(0.15);
 
     h->SetTitle("");
+    h->GetYaxis()->SetTitle("Local y [cm]");
+
     h->Draw(drawOpt);
+
+    TLatex extraY;
+    extraY.SetNDC();
+    extraY.SetTextFont(42);
+    extraY.SetTextSize(0.04);
+    extraY.SetTextAngle(90); // vertical text like Y axis
+    extraY.DrawLatex(0.97, 0.6, "Efficiency [%]");
 
     drawCMSHeader(label, getEnergyLabel(year));
     // c->SetBottomMargin(0.18);
@@ -204,46 +229,51 @@ void processRoll(TKey *keyR, TDirectory *dirC,
         return;
 
     TH1 *hR = (TH1 *)keyR->ReadObj();
+    if (!hR)
+        return;
 
     std::string safeName = sanitizeName(extractChamberName(keyR->GetName()));
 
     std::string outNameR = outDir + safeName + "_" + sYear1 + ".png";
     drawSingleHistogram(cR, hR, "colz", safeName, sYear1, outNameR);
 
+    TH1 *hC = (TH1 *)dirC->FindObjectAny(keyR->GetName());
+    if (!hC || !gROOT->GetClass(hC->ClassName())->InheritsFrom("TH1"))
+    {
+        delete hR;
+        return;
+    }
+
+    std::string outNameC = outDir + safeName + "_" + sYear2 + ".png";
+    drawSingleHistogram(cC, hC, "COLZ",
+                        sanitizeName(extractChamberName(hC->GetName())),
+                        sYear2, outNameC);
+
+    if (hR)
+        saveHistogramRoot(hR, outDir + safeName + "_" + sYear1 + ".C");
+
+    if (hC)
+        saveHistogramRoot(hC, outDir + safeName + "_" + sYear2 + ".C");
+
     std::string relRatioTitle =
         "(Eff(" + sYear1 + ")-Eff(" + sYear2 + "))/(Eff(" + sYear1 + ")+Eff(" + sYear2 + ")) " + safeName;
 
     TH1F *myRelDiff1D = new TH1F("myRelDiff1D", relRatioTitle.c_str(), 201, -2., +2.);
 
-    TH1 *hC = (TH1 *)dirC->FindObjectAny(keyR->GetName());
+    std::string outPathPng = outDir + safeName + "_" + sVsTag + "_relDiff1D.png";
+    std::string outPathC = outDir + safeName + "_" + sVsTag + "_relDiff1D.C";
 
-    if (hC && gROOT->GetClass(hC->ClassName())->InheritsFrom("TH1"))
-    {
-        std::string outNameC =
-            outDir + sanitizeName(extractChamberName(hC->GetName())) + "_" + sYear2 + ".png";
+    int countZeros = 0;
+    fillRelDiff(hR, hC, myRelDiff1D, countZeros);
 
-        drawSingleHistogram(cC, hC, "COLZ",
-                            sanitizeName(extractChamberName(hC->GetName())),
-                            sYear2, outNameC);
+    drawRelDiff(crelDif, myRelDiff1D, outPathPng, outPathC);
 
-        std::string outPathPng = outDir + safeName + "_" + sVsTag + "_relDiff1D.png";
-        std::string outPathC = outDir + safeName + "_" + sVsTag + "_relDiff1D.C";
+    double myMean = 9., mySigma = 99.;
+    if (fitRelDiff(myRelDiff1D, myMean, mySigma))
+        saveRelDiffCanvas(crelDif, outPathC, outPathPng);
 
-        int countZeros = 0;
-        fillRelDiff(hR, hC, myRelDiff1D, countZeros);
-
-        drawRelDiff(crelDif,
-                    myRelDiff1D,
-                    outPathPng,
-                    outPathC);
-
-        double myMean = 9., mySigma = 99.;
-        if (fitRelDiff(myRelDiff1D, myMean, mySigma))
-            saveRelDiffCanvas(crelDif, outPathC, outPathPng);
-
-        double fractionOne = 9.;
-        computeAsymmetry(myRelDiff1D, hmyAssymetry, fractionOne);
-    }
+    double fractionOne = 9.;
+    computeAsymmetry(myRelDiff1D, hmyAssymetry, fractionOne);
 
     delete hR;
     delete myRelDiff1D;
