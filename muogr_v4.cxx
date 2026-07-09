@@ -182,6 +182,7 @@ bool fitRelDiff(TH1F *h, double &mean, double &sigma)
     funcG->SetLineWidth(3);
 
     h->Fit("funcG", "Lre");
+    h->Fit(funcG, "LRE0");
 
     mean = funcG->GetParameter(1);
     sigma = funcG->GetParameter(2);
