@@ -36,6 +36,29 @@ void saveHistogramRoot(TH1 *h, const std::string &outPath)
     f.Close();
 }
 
+// Writes a clone of the canvas into an already-open TFile, without
+// changing the canvas's ownership or the caller's current directory.
+// Safe to call repeatedly on the same file for many chambers.
+void saveCanvasToCombinedRoot(TCanvas *c, TFile *outFile, const std::string &canvasName)
+{
+    if (!c || !outFile || !outFile->IsOpen())
+    {
+        std::cerr << "WARNING: could not save canvas '" << canvasName
+                  << "' to combined ROOT file (invalid canvas or file)" << std::endl;
+        return;
+    }
+
+    TDirectory *prevDir = gDirectory;
+
+    outFile->cd();
+    TCanvas *cClone = (TCanvas *)c->Clone(canvasName.c_str());
+    cClone->Write();
+    delete cClone;
+
+    if (prevDir)
+        prevDir->cd();
+}
+
 void setStats(TH1 *h, bool enable)
 {
     if (h)
@@ -223,7 +246,8 @@ void processRoll(TKey *keyR, TDirectory *dirC,
                  const std::string &sYear1, const std::string &sYear2,
                  const std::string &sVsTag,
                  TCanvas *cR, TCanvas *cC, TCanvas *crelDif,
-                 TH1F *hmyAssymetry)
+                 TH1F *hmyAssymetry,
+                 TFile *combinedOutFile)
 {
     TClass *clR = gROOT->GetClass(keyR->GetClassName());
     if (!clR || !clR->InheritsFrom("TH1"))
@@ -237,6 +261,7 @@ void processRoll(TKey *keyR, TDirectory *dirC,
 
     std::string outNameR = outDir + safeName + "_" + sYear1 + ".png";
     drawSingleHistogram(cR, hR, "colz", safeName, sYear1, outNameR);
+    saveCanvasToCombinedRoot(cR, combinedOutFile, safeName + "_" + sYear1);
 
     TH1 *hC = (TH1 *)dirC->FindObjectAny(keyR->GetName());
     if (!hC || !gROOT->GetClass(hC->ClassName())->InheritsFrom("TH1"))
@@ -249,6 +274,7 @@ void processRoll(TKey *keyR, TDirectory *dirC,
     drawSingleHistogram(cC, hC, "COLZ",
                         sanitizeName(extractChamberName(hC->GetName())),
                         sYear2, outNameC);
+    saveCanvasToCombinedRoot(cC, combinedOutFile, safeName + "_" + sYear2);
 
     if (hR)
         saveHistogramRoot(hR, outDir + safeName + "_" + sYear1 + ".C");
@@ -272,6 +298,8 @@ void processRoll(TKey *keyR, TDirectory *dirC,
     double myMean = 9., mySigma = 99.;
     if (fitRelDiff(myRelDiff1D, myMean, mySigma))
         saveRelDiffCanvas(crelDif, outPathC, outPathPng);
+
+    saveCanvasToCombinedRoot(crelDif, combinedOutFile, safeName + "_" + sVsTag + "_relDiff1D");
 
     double fractionOne = 9.;
     computeAsymmetry(myRelDiff1D, hmyAssymetry, fractionOne);
@@ -329,6 +357,14 @@ void muogr_v4(const char *fileRef,
     createCanvases(cR, cC, crelDif);
     TH1F *hmyAssymetry = createAsymmetryHistogram(sYear1, sYear2);
 
+    const std::string combinedOutPath = outDir + "all_results_" + sVsTag + ".root";
+    TFile *combinedOutFile = TFile::Open(combinedOutPath.c_str(), "RECREATE");
+    if (!combinedOutFile || combinedOutFile->IsZombie())
+    {
+        std::cerr << "ERROR: could not create combined ROOT file: " << combinedOutPath << std::endl;
+        combinedOutFile = nullptr;
+    }
+
     TIter iterR(dirR->GetListOfKeys());
     TKey *keyR;
     int myCount = 0;
@@ -339,7 +375,17 @@ void muogr_v4(const char *fileRef,
             continue;
 
         processRoll(keyR, dirC, outDir, sYear1, sYear2, sVsTag,
-                    cR, cC, crelDif, hmyAssymetry);
+                    cR, cC, crelDif, hmyAssymetry, combinedOutFile);
+    }
+
+    if (combinedOutFile)
+    {
+        combinedOutFile->cd();
+        hmyAssymetry->Write();
+        combinedOutFile->Write();
+        combinedOutFile->Close();
+        delete combinedOutFile;
+        std::cout << "Combined results written to " << combinedOutPath << std::endl;
     }
 
     dirR->GetFile()->Close();
