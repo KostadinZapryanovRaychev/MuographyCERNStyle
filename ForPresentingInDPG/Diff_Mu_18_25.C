@@ -148,6 +148,10 @@ void Diff_Mu_18_25()
    myRelDiff1D__1->GetZaxis()->SetLabelFont(42);
    myRelDiff1D__1->GetZaxis()->SetTitleOffset(1);
    myRelDiff1D__1->GetZaxis()->SetTitleFont(42);
+
+   // Zoom the x-axis to [-1,1]
+   myRelDiff1D__1->GetXaxis()->SetRangeUser(-1., 1.);
+
    myRelDiff1D__1->Draw();
 
    TPaveText *pt = new TPaveText(0.240535, 0.366957, 0.939866, 0.426087, "blNDC");
@@ -174,7 +178,7 @@ void Diff_Mu_18_25()
    tex->SetLineWidth(2);
    tex->SetNDC();
    tex->Draw();
-   tex = new TLatex(0.89755, 0.935652, "(13 TeV - 13.6 TeV)");
+   tex = new TLatex(0.89755, 0.935652, "(13 TeV & 13.6 TeV)");
    tex->SetTextAlign(32);
    tex->SetTextFont(42);
    tex->SetTextSize(0.04);
