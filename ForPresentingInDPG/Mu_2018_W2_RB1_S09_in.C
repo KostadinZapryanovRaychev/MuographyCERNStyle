@@ -7095,52 +7095,56 @@ void Mu_2018_W2_RB1_S09_in()
    palette->SetFillColor(TColor::GetColor("#f9f90e"));
    palette->SetFillStyle(1001);
    Muography_WmI2_RB1in_S09_Backward->GetListOfFunctions()->Add(palette, "br");
-   Muography_WmI2_RB1in_S09_Backward->SetLineColor(TColor::GetColor("#000099"));
    Muography_WmI2_RB1in_S09_Backward->GetXaxis()->SetTitle("Local x [cm]");
    Muography_WmI2_RB1in_S09_Backward->GetXaxis()->SetLabelFont(42);
-   Muography_WmI2_RB1in_S09_Backward->GetXaxis()->SetTitleSize(0.02400000020861626);
-   Muography_WmI2_RB1in_S09_Backward->GetXaxis()->SetTitleOffset(2);
+   Muography_WmI2_RB1in_S09_Backward->GetXaxis()->SetLabelSize(0.04);
+   Muography_WmI2_RB1in_S09_Backward->GetXaxis()->SetTitleSize(0.04);
+   Muography_WmI2_RB1in_S09_Backward->GetXaxis()->SetTitleOffset(1.2);
    Muography_WmI2_RB1in_S09_Backward->GetXaxis()->SetTitleFont(42);
+
    Muography_WmI2_RB1in_S09_Backward->GetYaxis()->SetTitle("Local y [cm]");
    Muography_WmI2_RB1in_S09_Backward->GetYaxis()->SetLabelFont(42);
-   Muography_WmI2_RB1in_S09_Backward->GetYaxis()->SetTitleSize(0.02400000020861626);
+   Muography_WmI2_RB1in_S09_Backward->GetYaxis()->SetLabelSize(0.04);
+   Muography_WmI2_RB1in_S09_Backward->GetYaxis()->SetTitleSize(0.04);
+   Muography_WmI2_RB1in_S09_Backward->GetYaxis()->SetTitleOffset(1.2);
    Muography_WmI2_RB1in_S09_Backward->GetYaxis()->SetTitleFont(42);
+
    Muography_WmI2_RB1in_S09_Backward->GetZaxis()->SetLabelFont(42);
-   Muography_WmI2_RB1in_S09_Backward->GetZaxis()->SetTitleOffset(1);
+   Muography_WmI2_RB1in_S09_Backward->GetZaxis()->SetLabelSize(0.04);
    Muography_WmI2_RB1in_S09_Backward->GetZaxis()->SetTitleFont(42);
+   Muography_WmI2_RB1in_S09_Backward->GetZaxis()->SetTitleOffset(1);
    Muography_WmI2_RB1in_S09_Backward->Draw("colz");
-   TLatex *tex = new TLatex(0.97, 0.6, "Efficiency [%]");
+
+   // CMS
+   TLatex *tex = new TLatex(0.0991091, 0.918261, "CMS");
+   tex->SetTextFont(61);
+   tex->SetLineWidth(2);
+   tex->SetNDC();
+   tex->Draw();
+
+   // Preliminary
+   tex = new TLatex(0.172606, 0.916522, "Preliminary");
+   tex->SetTextFont(52);
+   tex->SetTextSize(0.03826087);
+   tex->SetLineWidth(2);
+   tex->SetNDC();
+   tex->Draw();
+
+   // Energy / data label
+   tex = new TLatex(0.900891, 0.926957, "2018 data (13 TeV)");
+   tex->SetTextAlign(32);
+   tex->SetTextFont(42);
+   tex->SetTextSize(0.04);
+   tex->SetLineWidth(2);
+   tex->SetNDC();
+   tex->Draw();
+
+   // Efficiency label
+   tex = new TLatex(0.99, 0.68, "Efficiency [%]");
    tex->SetTextFont(42);
    tex->SetTextSize(0.04);
    tex->SetTextAngle(90);
    tex->SetLineWidth(2);
    tex->SetNDC();
    tex->Draw();
-   tex = new TLatex(0.0955968, 0.903683, "CMS");
-   tex->SetTextFont(61);
-   tex->SetLineWidth(2);
-   tex->SetNDC();
-   tex->Draw();
-   tex = new TLatex(0.168598, 0.903683, "Preliminary");
-   tex->SetTextFont(52);
-   tex->SetTextSize(0.03777148);
-   tex->SetTextAngle(0.3649363);
-   tex->SetLineWidth(2);
-   tex->SetNDC();
-   tex->Draw();
-   tex = new TLatex(0.711472, 0.905571, "2018 data (13 TeV)");
-   tex->SetTextFont(42);
-   tex->SetTextSize(0.04);
-   tex->SetLineWidth(2);
-   tex->SetNDC();
-   tex->Draw();
-   tex = new TLatex(0.45, 0.93, "");
-   tex->SetTextAlign(22);
-   tex->SetTextFont(42);
-   tex->SetTextSize(0.04);
-   tex->SetLineWidth(2);
-   tex->SetNDC();
-   tex->Draw();
-   cR->Modified();
-   cR->SetSelected(cR);
 }
