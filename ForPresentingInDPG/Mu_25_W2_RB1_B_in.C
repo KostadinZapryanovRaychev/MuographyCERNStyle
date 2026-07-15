@@ -5,15 +5,16 @@ void Mu_25_W2_RB1_B_in()
 {
    //=========Macro generated from canvas: cC/cC
    //=========  (Thu Jul  9 16:35:49 2026) by ROOT version 6.36.06
-   TCanvas *cC = new TCanvas("cC", "cC", 0, 33, 1728, 1084);
+   TCanvas *cC = new TCanvas("cC", "cC", 0, 33, 900, 600);
    gStyle->SetOptFit(0);
    gStyle->SetOptStat(1111);
    gStyle->SetOptTitle(1);
    TColor::SetPalette(57, nullptr);
    cC->Range(-156.56, -88.12462, 173.04, 91.72154);
    cC->SetFillColor(0);
+   cC->SetBottomMargin(0.15);
    cC->SetBorderMode(0);
-   cC->SetBorderSize(2);
+   cC->SetBorderSize(0);
    cC->SetRightMargin(0.15);
    cC->SetTopMargin(0.12);
    cC->SetFrameBorderMode(0);
