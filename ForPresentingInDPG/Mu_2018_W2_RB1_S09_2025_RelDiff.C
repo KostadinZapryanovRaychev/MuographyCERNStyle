@@ -179,4 +179,10 @@ void Mu_2018_W2_RB1_S09_2025_RelDiff()
    tex->SetTextAlign(31);
    tex->SetNDC();
    tex->Draw();
+
+   tex = new TLatex(0.15, 0.82, "2018 & 2025 data");
+   tex->SetTextFont(42);
+   tex->SetTextSize(0.035);
+   tex->SetNDC();
+   tex->Draw();
 }
