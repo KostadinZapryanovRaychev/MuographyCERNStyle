@@ -7094,54 +7094,63 @@ void Mu_25_W2_RB1_B_in()
    palette->SetTitle("");
    palette->SetFillColor(TColor::GetColor("#f9f90e"));
    palette->SetFillStyle(1001);
+
    unnamed->GetListOfFunctions()->Add(palette, "br");
-   unnamed->SetLineColor(TColor::GetColor("#000099"));
+
    unnamed->GetXaxis()->SetTitle("Local x [cm]");
-   unnamed->GetXaxis()->SetRange(1, 246);
    unnamed->GetXaxis()->SetLabelFont(42);
-   unnamed->GetXaxis()->SetTitleSize(0.02400000020861626);
-   unnamed->GetXaxis()->SetTitleOffset(2);
+   unnamed->GetXaxis()->SetLabelSize(0.04);
+   unnamed->GetXaxis()->SetTitleSize(0.04);
+   unnamed->GetXaxis()->SetTitleOffset(1.2);
    unnamed->GetXaxis()->SetTitleFont(42);
+
    unnamed->GetYaxis()->SetTitle("Local y [cm]");
-   unnamed->GetYaxis()->SetRange(1, 140);
    unnamed->GetYaxis()->SetLabelFont(42);
-   unnamed->GetYaxis()->SetTitleSize(0.02400000020861626);
+   unnamed->GetYaxis()->SetLabelSize(0.04);
+   unnamed->GetYaxis()->SetTitleSize(0.04);
+   unnamed->GetYaxis()->SetTitleOffset(1.2);
    unnamed->GetYaxis()->SetTitleFont(42);
+
    unnamed->GetZaxis()->SetLabelFont(42);
-   unnamed->GetZaxis()->SetTitleOffset(1);
+   unnamed->GetZaxis()->SetLabelSize(0.04);
    unnamed->GetZaxis()->SetTitleFont(42);
-   unnamed->Draw("COLZ");
-   TLatex *tex = new TLatex(0.97, 0.6, "Efficiency [%]");
+   unnamed->GetZaxis()->SetTitleOffset(1);
+
+   unnamed->Draw("colz");
+
+   // CMS
+   TLatex *tex = new TLatex(0.0991091, 0.918261, "CMS");
+   tex->SetTextFont(61);
+   tex->SetLineWidth(2);
+   tex->SetNDC();
+   tex->Draw();
+
+   // Preliminary
+   tex = new TLatex(0.172606, 0.916522, "Preliminary");
+   tex->SetTextFont(52);
+   tex->SetTextSize(0.03826087);
+   tex->SetLineWidth(2);
+   tex->SetNDC();
+   tex->Draw();
+
+   // Energy / data label
+   tex = new TLatex(0.900891, 0.926957, "2025 data (13.6 TeV)");
+   tex->SetTextAlign(32);
+   tex->SetTextFont(42);
+   tex->SetTextSize(0.04);
+   tex->SetLineWidth(2);
+   tex->SetNDC();
+   tex->Draw();
+
+   // Efficiency label
+   tex = new TLatex(0.99, 0.68, "Efficiency [%]");
    tex->SetTextFont(42);
    tex->SetTextSize(0.04);
    tex->SetTextAngle(90);
    tex->SetLineWidth(2);
    tex->SetNDC();
    tex->Draw();
-   tex = new TLatex(0.0946548, 0.914783, "CMS");
-   tex->SetTextFont(61);
-   tex->SetLineWidth(2);
-   tex->SetNDC();
-   tex->Draw();
-   tex = new TLatex(0.163384, 0.91407, "Preliminary");
-   tex->SetTextFont(52);
-   tex->SetTextSize(0.045);
-   tex->SetLineWidth(2);
-   tex->SetNDC();
-   tex->Draw();
-   tex = new TLatex(0.685969, 0.913043, "2025 data (13.6 TeV)");
-   tex->SetTextFont(42);
-   tex->SetTextSize(0.04);
-   tex->SetLineWidth(2);
-   tex->SetNDC();
-   tex->Draw();
-   tex = new TLatex(0.449889, 0.921739, "");
-   tex->SetTextAlign(22);
-   tex->SetTextFont(42);
-   tex->SetTextSize(0.04);
-   tex->SetLineWidth(2);
-   tex->SetNDC();
-   tex->Draw();
+
    cC->Modified();
    cC->SetSelected(cC);
 }
