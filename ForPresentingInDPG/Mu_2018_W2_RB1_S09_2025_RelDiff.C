@@ -138,7 +138,7 @@ void Mu_2018_W2_RB1_S09_2025_RelDiff()
    myRelDiff1D__2__1->GetListOfFunctions()->Add(funcG2, "");
    myRelDiff1D__2__1->SetFillColor(TColor::GetColor("#0000cc"));
    myRelDiff1D__2__1->SetLineColor(TColor::GetColor("#000099"));
-   myRelDiff1D__2__1->GetXaxis()->SetTitle("Relative Efficiency");
+   myRelDiff1D__2__1->GetXaxis()->SetTitle("Relative Efficiency [arb. units]");
    myRelDiff1D__2__1->GetXaxis()->SetLabelFont(42);
    myRelDiff1D__2__1->GetXaxis()->SetTitleOffset(1);
    myRelDiff1D__2__1->GetXaxis()->SetTitleFont(42);
@@ -157,30 +157,26 @@ void Mu_2018_W2_RB1_S09_2025_RelDiff()
    pt->SetFillStyle(0);
    pt->SetTextFont(42);
    pt->Draw("blNDC");
-   TLatex *tex = new TLatex(0.0991091, 0.918261, "CMS");
+
+   // CMS label
+   TLatex *tex = new TLatex(0.10, 0.92, "CMS");
    tex->SetTextFont(61);
-   tex->SetLineWidth(2);
+   tex->SetTextSize(0.05);
    tex->SetNDC();
    tex->Draw();
-   tex = new TLatex(0.172606, 0.916522, "Preliminary");
+
+   // Preliminary
+   tex = new TLatex(0.18, 0.92, "Preliminary");
    tex->SetTextFont(52);
-   tex->SetTextSize(0.03826087);
-   tex->SetLineWidth(2);
+   tex->SetTextSize(0.04);
    tex->SetNDC();
    tex->Draw();
-   tex = new TLatex(0.152561, 0.813913, "2018 vs 2025 data");
-   tex->SetTextFont(42);
-   tex->SetTextSize(0.035);
-   tex->SetLineWidth(2);
-   tex->SetNDC();
-   tex->Draw();
-   tex = new TLatex(0.900891, 0.926957, "(13 TeV & 13.6 TeV)");
-   tex->SetTextAlign(32);
+
+   // Energy label
+   tex = new TLatex(0.90, 0.92, "(13 TeV & 13.6 TeV)");
    tex->SetTextFont(42);
    tex->SetTextSize(0.04);
-   tex->SetLineWidth(2);
+   tex->SetTextAlign(31);
    tex->SetNDC();
    tex->Draw();
-   crelDif->Modified();
-   crelDif->SetSelected(crelDif);
 }
