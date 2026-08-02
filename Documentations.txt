@@ -24,12 +24,8 @@
 \uc0\u1048 \u1084 \u1072  \u1057  \u1092 \u1072 \u1081 \u1083 :\cb1 \
 \pard\pardeftab720\partightenfactor0
 {\field{\*\fldinst{HYPERLINK "https://twiki.cern.ch/twiki/pub/CMSPublic/RPCDPGResultsRPC2018/20171218_efficiency_Run2017_cBarrel.C"}}{\fldrslt \cf4 \cb5 https://twiki.cern.ch/twiki/pub/CMSPublic/RPCDPGResultsRPC2018/20171218_efficiency_Run2017_cBarrel.C}}\
-\
-\
-\
-\
-\
-\
+
+
 https://docs.google.com/presentation/d/1C_L__hWc6ToKOMZQjEkFdFDshb1EyvGXmw7J759zG4w/edit?slide=id.g3cb03e8852c_5_114#slide=id.g3cb03e8852c_5_114\
 \
 \
@@ -1674,7 +1670,7 @@ c2->SetSelected(c2);\
 \
 first code is the current way I create a images , the idea is to be rewritten in the second manner because I want again to produce comparison analysis for the repaired cameras provided in first code but as by the second code in the CMS style and to be saved again in the output dir any suggestions what the final version should look like\
 \
-The final RESULT SHOULD BE \
+The final RESULT SHOULD BE 
  cd /eos/user/k/kraychev/presentation_CMSW_Muon_update/CMSSW_16_0_1/src/OfflineRPCEfficiency/DQM/RPCMonitorModule/macros/Muogram\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\pardirnatural\partightenfactor0
 
@@ -1721,3 +1717,131 @@ root -l -b -q 'muogr_v4.cxx("files/AnalyzeEfficiency_321475_325172_RPCMon_2018D.
 7. 
 \f1\fs24 \cf0 \cb1 \
 }
+
+
+
+2023 the repaired chamber is switched on
+
+
+/eos/cms/store/group/dpg_rpc/comm_rpc/Run-III/Run2025F/Collisions/fill11053_2448b 
+
+Sum of all recorded luminosities
+All those lump summed 
+Ana change 
+
+Only bigger than 2000 to sum
+
+Recorder luminosity
+
+
+
+JINST 5 (2010) T03017, DOI: 10.1088/1748-0221/5/03/T03017 what is this ? ---
+local impact point on the RPC surface ? What is this ? ---- in the local coordinate system of geometry ()  a global is in the 
+Why 1 to 1 cm ?  --- depends on the size of partitions and because all histogram ( it is dynamical decision ) this is like that from RUN 1 , good the smallest width of strip is 1,5 to 4 cm and depending of this because tfrom razdilitelna sposobnost 
+Resolution 1 cm is a good .
+
+
+
+Presentation Speaking Scenario
+Slide 1 – Title
+
+Hello everyone.
+
+Today, I would like to present a comparison of the RPC performance using muography plots, with a particular focus on a chamber that was repaired and put back into operation.
+
+The main goal of this study is to compare the RPC performance between 2018 and 2025, and to check whether we can observe any indication of ageing or performance degradation.
+
+In particular, I will focus on the chamber that was previously switched off because of a gas leak, and then repaired and returned to operation.
+
+Slide 2 – Introduction
+
+Let me first briefly explain the approach used in this study.
+
+We produced RPC efficiency maps, or what we call muographies, using the Segment Extrapolation method. The resolution of these maps is approximately one by one centimetre, so we can look at the efficiency locally across the RPC surface.
+
+For the comparison, we used two sets of proton-proton collision data. One is from 2018, during Run 2, and the other is from 2025, during Run 3.
+
+The important point here is that the data were collected under relatively similar conditions, with an instantaneous luminosity of around 2.5 times 10 to the 34, and with more than 2000 colliding bunches.
+
+We produced these efficiency maps for all RPC rolls and compared the 2018 and 2025 results. The main purpose was to look for any possible signs of ageing or degradation.
+
+We paid particular attention to chambers that had been switched off because of gas leaks and were later repaired and brought back into operation.
+
+So, in addition to simply looking at the maps visually, we also performed a basic statistical comparison between the two data-taking periods.
+
+For each approximately one-by-one-centimetre bin, we calculated the relative efficiency difference between 2018 and 2025. This gives us a quantitative way to evaluate how similar or different the chamber performance is between the two periods.
+
+So, with this methodology in mind, let me now show one example of the comparison.
+
+Slide 3 – RPC Efficiency Comparison
+
+Here we can see the efficiency as a function of the local impact point on the RPC surface.
+
+On the left, we have the data collected in 2018, while on the right we have the corresponding measurement from 2025.
+
+The chamber shown here is W-2_RB1in_S09_Backward, which is one of the barrel wheels.
+
+At first glance, the two efficiency maps look quite similar. We can see the lower-efficiency regions distributed across the chamber, and these are mainly related to the spacers used in the RPC construction.
+
+These spacers separate the two resistive electrodes and create the gas gaps, so the corresponding regions naturally appear as areas with lower efficiency.
+
+There is also a region at the far end of the x-axis where we cannot calculate the efficiency because there are no extrapolated hits available in that area.
+
+Now, the interesting part of this comparison is the history of this chamber.
+
+During Run 2, the chamber was operating continuously. However, after that period, it had to be disconnected from the gas supply because of a gas leak in the corresponding gas channel.
+
+The chamber was then reconnected in 2023, and the gas input pipes were replaced during the 2023–2024 technical stop.
+
+So, the 2025 map represents the chamber after the repair procedure and after more than one year of operation.
+
+When we compare the two maps, we can see that the overall efficiency pattern remains very similar.
+
+This is an important observation because it indicates that, after the gas system was repaired and the chamber received the appropriate gas flow, the chamber was able to recover and maintain stable performance.
+
+So, visually, there is no obvious indication of a significant degradation between the two periods.
+
+To make this comparison more quantitative, we also looked at the relative efficiency difference on a bin-by-bin basis.
+
+Slide 4 – Relative Efficiency Difference and Conclusion
+
+On this slide, we show the distribution of the relative efficiency difference between 2018 and 2025.
+
+The idea is quite straightforward: for every individual bin, we compare the efficiency measured in 2018 with the efficiency measured in 2025.
+
+The quantity is normalized, so the values range from minus one to plus one.
+
+A value close to zero means that the efficiency in 2018 and 2025 is very similar.
+
+On the other hand, values closer to plus one or minus one correspond to bins where there is a very large difference between the two measurements.
+
+So, this distribution gives us another way to quantify what we already observed from the efficiency maps.
+
+The overall result is consistent with the visual comparison.
+
+There is no indication of a significant loss of performance after the chamber was repaired and put back into operation.
+
+Therefore, the main conclusion from this study is that the chamber demonstrates stable and high efficiency performance after the gas repair procedure.
+
+This is particularly encouraging because the chamber had previously been taken out of operation due to the gas leak, but after the repair and restoration of the appropriate gas flow, its performance remained stable.
+
+So, overall, the comparison between 2018 and 2025 shows that the repaired chamber is performing well, with no significant indication of degradation in the results presented here.
+
+Thank you for your attention. I am happy to take any questions.
+
+
+
+https://indico.cern.ch/event/1713077/#48-rpc-muography-comparison
+
+
+TODO
+Over each partition
+
+2748 for all chambers
+Root -l -b 
+To be done 
+Png to become and to be in its self folder 
+Wheel to Wheel
+
+
+Summery to all pictures but to be spoken with Hadjiiska

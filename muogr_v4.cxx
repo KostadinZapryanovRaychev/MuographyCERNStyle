@@ -166,6 +166,17 @@ TH1F *createAsymmetryHistogram(const std::string &sYear1,
 
 void fillRelDiff(TH1 *hR, TH1 *hC, TH1F *hOut, int &countZeros)
 {
+    std::ofstream equalFile("equal_efficiency_bins.txt");
+    std::ofstream differentThanHundred("different_than_hundred_bins.txt");
+
+    // Histogram for cases where Eff(2018) == Eff(2025)
+    TH1F *hEqualEfficiency = new TH1F("hEqualEfficiency",
+                                      ";Efficiency [%];Entries",
+                                      100, 0, 100);
+
+    hEqualEfficiency->SetFillColor(kGreen + 1);
+    hEqualEfficiency->SetLineColor(kGreen + 2);
+
     int xmax = hR->GetXaxis()->GetNbins();
     int ymax = hR->GetYaxis()->GetNbins();
 
@@ -183,10 +194,55 @@ void fillRelDiff(TH1 *hR, TH1 *hC, TH1F *hOut, int &countZeros)
             }
             else
             {
+
+                if (aR == aC)
+                {
+                    equalFile << "Bin X=" << i
+                              << " Y=" << j
+                              << "  Eff(" << aR << ") = Eff(" << aC << ")"
+                              << std::endl;
+
+                    // Fill histogram with the common efficiency value
+                    hEqualEfficiency->Fill(aR);
+                }
+
+                if (aR != 100 && aC != 100 && aR == aC)
+                {
+                    differentThanHundred << "Bin X=" << i
+                                         << " Y=" << j
+                                         << "  Eff(" << aR << ") = Eff(" << aC << ")"
+                                         << std::endl;
+                }
+
                 hOut->Fill((aR - aC) / (aR + aC));
             }
         }
     }
+
+    equalFile.close();
+    differentThanHundred.close();
+
+    // Draw test histogram
+    TCanvas *cEqual = new TCanvas("cEqual",
+                                  "Equal efficiency bins",
+                                  900, 600);
+
+    hEqualEfficiency->Draw();
+
+    TLatex warning;
+    warning.SetNDC();
+    warning.SetTextFont(62);
+    warning.SetTextSize(0.06);
+    warning.SetTextColor(kRed);
+    warning.DrawLatex(0.30, 0.95, "NOT FOR APPROVAL");
+
+    cEqual->Modified();
+    cEqual->Update();
+
+    cEqual->SaveAs("equal_efficiency_distribution.png");
+
+    delete cEqual;
+    delete hEqualEfficiency;
 }
 
 bool fitRelDiff(TH1F *h, double &mean, double &sigma)

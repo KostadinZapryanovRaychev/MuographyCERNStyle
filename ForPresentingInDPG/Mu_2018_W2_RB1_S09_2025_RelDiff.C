@@ -138,7 +138,9 @@ void Mu_2018_W2_RB1_S09_2025_RelDiff()
    myRelDiff1D__2__1->GetListOfFunctions()->Add(funcG2, "");
    myRelDiff1D__2__1->SetFillColor(TColor::GetColor("#0000cc"));
    myRelDiff1D__2__1->SetLineColor(TColor::GetColor("#000099"));
-   myRelDiff1D__2__1->GetXaxis()->SetTitle("Relative Efficiency [arb. units]");
+   myRelDiff1D__2__1->GetXaxis()->SetTitle("Relative Efficiency [bins ratio]");
+   myRelDiff1D__2__1->GetYaxis()->SetTitle("Numbers of bins [1 cm X 1 cm]");
+   myRelDiff1D__2__1->GetYaxis()->SetTitleOffset(1.5);
    myRelDiff1D__2__1->GetXaxis()->SetLabelFont(42);
    myRelDiff1D__2__1->GetXaxis()->SetTitleOffset(1);
    myRelDiff1D__2__1->GetXaxis()->SetTitleFont(42);
