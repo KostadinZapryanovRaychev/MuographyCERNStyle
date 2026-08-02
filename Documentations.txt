@@ -1727,7 +1727,8 @@ root -l -b -q 'muogr_v4.cxx("files/AnalyzeEfficiency_321475_325172_RPCMon_2018D.
 
 Sum of all recorded luminosities
 All those lump summed 
-Ana change 
+
+Ana change 
 
 Only bigger than 2000 to sum
 
@@ -1845,3 +1846,6 @@ Wheel to Wheel
 
 
 Summery to all pictures but to be spoken with Hadjiiska
+
+
+scp ~/Documents/BAN-Doctor-Degree/Muographies/files/AnalyzeEfficiency_396805_397817_RPCMon2025F.root kraychev@lxplus.cern.ch:/eos/user/k/kraychev/muographies/files
