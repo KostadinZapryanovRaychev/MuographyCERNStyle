@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
-#include <fstream>
 // #include <set>
 
 #include "TROOT.h"
@@ -166,9 +165,6 @@ TH1F *createAsymmetryHistogram(const std::string &sYear1,
 
 void fillRelDiff(TH1 *hR, TH1 *hC, TH1F *hOut, int &countZeros)
 {
-    std::ofstream equalFile("equal_efficiency_bins.txt");
-    std::ofstream differentThanHundred("different_than_hundred_bins.txt");
-
     // Histogram for cases where Eff(2018) == Eff(2025)
     TH1F *hEqualEfficiency = new TH1F("hEqualEfficiency",
                                       ";Efficiency [%];Entries",
@@ -197,30 +193,14 @@ void fillRelDiff(TH1 *hR, TH1 *hC, TH1F *hOut, int &countZeros)
 
                 if (aR == aC)
                 {
-                    equalFile << "Bin X=" << i
-                              << " Y=" << j
-                              << "  Eff(" << aR << ") = Eff(" << aC << ")"
-                              << std::endl;
-
                     // Fill histogram with the common efficiency value
                     hEqualEfficiency->Fill(aR);
-                }
-
-                if (aR != 100 && aC != 100 && aR == aC)
-                {
-                    differentThanHundred << "Bin X=" << i
-                                         << " Y=" << j
-                                         << "  Eff(" << aR << ") = Eff(" << aC << ")"
-                                         << std::endl;
                 }
 
                 hOut->Fill((aR - aC) / (aR + aC));
             }
         }
     }
-
-    equalFile.close();
-    differentThanHundred.close();
 
     // Draw test histogram
     TCanvas *cEqual = new TCanvas("cEqual",
