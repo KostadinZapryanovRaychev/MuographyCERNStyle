@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 // #include <set>
 
 #include "TROOT.h"
@@ -283,7 +284,8 @@ void processRoll(TKey *keyR, TDirectory *dirC,
                  const std::string &sVsTag,
                  TCanvas *cR, TCanvas *cC, TCanvas *crelDif,
                  TH1F *hmyAssymetry,
-                 TFile *combinedOutFile)
+                 TFile *combinedOutFile,
+                 std::ofstream &outMeansTxt)
 {
     TClass *clR = gROOT->GetClass(keyR->GetClassName());
     if (!clR || !clR->InheritsFrom("TH1"))
@@ -333,7 +335,11 @@ void processRoll(TKey *keyR, TDirectory *dirC,
 
     double myMean = 9., mySigma = 99.;
     if (fitRelDiff(myRelDiff1D, myMean, mySigma))
+    {
         saveRelDiffCanvas(crelDif, outPathC, outPathPng);
+        outMeansTxt << safeName << " " << std::fixed << std::setprecision(5)
+                    << myMean << std::endl;
+    }
 
     saveCanvasToCombinedRoot(crelDif, combinedOutFile, safeName + "_" + sVsTag + "_relDiff1D");
 
@@ -399,6 +405,12 @@ void muogr_v4(const char *fileRef,
     createCanvases(cR, cC, crelDif);
     TH1F *hmyAssymetry = createAsymmetryHistogram(sYear1, sYear2);
 
+    const std::string meansOutPath = outDir + "relative_diff_means_" + sVsTag + ".txt";
+    std::ofstream outMeansTxt(meansOutPath.c_str());
+    if (!outMeansTxt.is_open())
+        std::cerr << "ERROR: could not create means output file: " << meansOutPath << std::endl;
+    outMeansTxt << "# rollName  meanRelDiff(" << sYear1 << "," << sYear2 << ")" << std::endl;
+
     const std::string combinedOutPath = outDir + "all_results_" + sVsTag + ".root";
     TFile *combinedOutFile = TFile::Open(combinedOutPath.c_str(), "RECREATE");
     if (!combinedOutFile || combinedOutFile->IsZombie())
@@ -417,7 +429,7 @@ void muogr_v4(const char *fileRef,
     //         continue;
 
     //     processRoll(keyR, dirC, outDir, sYear1, sYear2, sVsTag,
-    //                 cR, cC, crelDif, hmyAssymetry, combinedOutFile);
+    //                 cR, cC, crelDif, hmyAssymetry, combinedOutFile, outMeansTxt);
     // }
 
     // this is for all the chambers
@@ -426,8 +438,11 @@ void muogr_v4(const char *fileRef,
         myCount++;
 
         processRoll(keyR, dirC, outDir, sYear1, sYear2, sVsTag,
-                    cR, cC, crelDif, hmyAssymetry, combinedOutFile);
+                    cR, cC, crelDif, hmyAssymetry, combinedOutFile, outMeansTxt);
     }
+
+    outMeansTxt.close();
+    std::cout << "Per-roll mean relative differences written to " << meansOutPath << std::endl;
 
     if (combinedOutFile)
     {
