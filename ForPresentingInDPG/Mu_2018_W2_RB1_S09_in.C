@@ -7131,7 +7131,7 @@ void Mu_2018_W2_RB1_S09_in()
    tex->Draw();
 
    // Energy / data label
-   tex = new TLatex(0.900891, 0.926957, "2018 data (13 TeV)");
+   tex = new TLatex(0.900891, 0.926957, "pp data, 2018 (13 TeV)");
    tex->SetTextAlign(32);
    tex->SetTextFont(42);
    tex->SetTextSize(0.04);

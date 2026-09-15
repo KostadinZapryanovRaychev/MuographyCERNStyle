@@ -175,16 +175,16 @@ void Mu_2018_W2_RB1_S09_2025_RelDiff()
    tex->Draw();
 
    // Energy label
-   tex = new TLatex(0.90, 0.92, "(13 TeV & 13.6 TeV)");
+   tex = new TLatex(0.90, 0.92, "pp data, Run 2 (13 TeV), Run 3 (13.6 TeV)");
    tex->SetTextFont(42);
    tex->SetTextSize(0.04);
    tex->SetTextAlign(31);
    tex->SetNDC();
    tex->Draw();
 
-   tex = new TLatex(0.15, 0.82, "2018 & 2025 data");
-   tex->SetTextFont(42);
-   tex->SetTextSize(0.035);
-   tex->SetNDC();
-   tex->Draw();
+   // tex = new TLatex(0.15, 0.82, "2018 & 2025 data");
+   // tex->SetTextFont(42);
+   // tex->SetTextSize(0.035);
+   // tex->SetNDC();
+   // tex->Draw();
 }

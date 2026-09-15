@@ -7134,7 +7134,7 @@ void Mu_25_W2_RB1_B_in()
    tex->Draw();
 
    // Energy / data label
-   tex = new TLatex(0.900891, 0.926957, "2025 data (13.6 TeV)");
+   tex = new TLatex(0.900891, 0.926957, "pp data, 2025 (13.6 TeV)");
    tex->SetTextAlign(32);
    tex->SetTextFont(42);
    tex->SetTextSize(0.04);
