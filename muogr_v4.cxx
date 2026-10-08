@@ -7,7 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-// #include <set>
+#include <set>
 
 #include "TROOT.h"
 #include "TFile.h"
@@ -158,23 +158,19 @@ void processRoll(TKey *keyR, TDirectory *dirC,
     delete myRelDiff1D;
 }
 
-// void muogr_v4(const char *fileRef,
-//               const char *fileComp,
-//               const char *histoPath,
-//               const char *year1 = "2018",
-//               const char *year2 = "2025",
-//               const char *rollNamesFile = "rollNames.txt")
-
 void muogr_v4(const char *fileRef,
               const char *fileComp,
               const char *histoPath,
               const char *year1 = "2018",
-              const char *year2 = "2025")
+              const char *year2 = "2025",
+              const char *rollNamesFile = "rollNames.txt",
+              const char *allRolls = "")
 {
-    const std::string outDir = "output_cms_style/";
+    const std::string outDir = "for_conference_2026/";
     const std::string sYear1 = std::string(year1);
     const std::string sYear2 = std::string(year2);
     const std::string sVsTag = sYear1 + "vs" + sYear2;
+    const bool processAllRolls = std::string(allRolls).length() > 0;
 
     if (gSystem->AccessPathName(outDir.c_str()))
         gSystem->mkdir(outDir.c_str(), kTRUE);
@@ -189,18 +185,23 @@ void muogr_v4(const char *fileRef,
         std::cerr << "ERROR: comparison file not found: " << fileComp << std::endl;
         return;
     }
-    // if (gSystem->AccessPathName(rollNamesFile))
-    // {
-    //     std::cerr << "ERROR: roll names file not found: " << rollNamesFile << std::endl;
-    //     return;
-    // }
 
-    // std::set<std::string> targetChambers = loadRollNames(rollNamesFile);
-    // if (targetChambers.empty())
-    // {
-    //     std::cerr << "ERROR: no roll names loaded from " << rollNamesFile << std::endl;
-    //     return;
-    // }
+    std::set<std::string> targetChambers;
+    if (!processAllRolls)
+    {
+        if (gSystem->AccessPathName(rollNamesFile))
+        {
+            std::cerr << "ERROR: roll names file not found: " << rollNamesFile << std::endl;
+            return;
+        }
+
+        targetChambers = loadRollNames(rollNamesFile);
+        if (targetChambers.empty())
+        {
+            std::cerr << "ERROR: no roll names loaded from " << rollNamesFile << std::endl;
+            return;
+        }
+    }
 
     TDirectory *dirR = openFileAtPath(fileRef, histoPath);
     if (!dirR)
@@ -220,19 +221,11 @@ void muogr_v4(const char *fileRef,
     TIter iterR(dirR->GetListOfKeys());
     TKey *keyR;
     int myCount = 0;
-    // while ((keyR = (TKey *)iterR.Next()))
-    // {
-    //     myCount++;
-    //     if (targetChambers.find(keyR->GetName()) == targetChambers.end())
-    //         continue;
-
-    //     processRoll(keyR, dirC, sYear1, sYear2, hmyAssymetry, outMeansTxt);
-    // }
-
-    // this is for all the chambers
     while ((keyR = (TKey *)iterR.Next()))
     {
         myCount++;
+        if (!processAllRolls && targetChambers.find(keyR->GetName()) == targetChambers.end())
+            continue;
 
         processRoll(keyR, dirC, sYear1, sYear2, hmyAssymetry, outMeansTxt);
     }

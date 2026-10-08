@@ -1,0 +1,3 @@
+# rollName  meanRelDiff(2018,2025)
+WM2_RB1in_S09_Forward -0.00940
+WM2_RB1out_S09_Backward -0.00241
