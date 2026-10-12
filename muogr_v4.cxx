@@ -1,9 +1,9 @@
 #include "CmsHelpers.h"
 #include "CmsHelpers.cxx"
-#include "tdrstyle.h"
-#include "tdrstyle.cxx"
-#include "CMS_lumi.h"
-#include "CMS_lumi.cxx"
+#include "style/tdrstyle.h"
+#include "style/tdrstyle.cxx"
+#include "style/CMS_lumi.h"
+#include "style/CMS_lumi.cxx"
 #include "MuographyAnalysis.h"
 #include "MuographyAnalysis.cxx"
 
