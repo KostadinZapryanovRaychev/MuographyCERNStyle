@@ -9,25 +9,15 @@ static const bool writeExtraText = true;
 static const float extraTextFont = 52;
 static const float lumiTextSize = 0.6;
 static const float lumiTextOffset = 0.2;
-static const float cmsTextSize = 0.75;
+static const float cmsTextSize = 0.85;
 static const float relPosX = 0.045;
 static const float relPosY = 0.035;
-static const float relExtraDY = 1.2;
 static const float extraOverCmsTextSize = 0.76;
 
 void CMS_lumi(TPad *pad, const std::string &rightText,
              int iPosX, const std::string &extraText)
 {
     bool outOfFrame = (iPosX / 10 == 0);
-
-    int alignX_ = 2;
-    if (iPosX / 10 == 1)
-        alignX_ = 1;
-    else if (iPosX / 10 == 2)
-        alignX_ = 2;
-    else if (iPosX / 10 == 3)
-        alignX_ = 3;
-    int align_ = 10 * alignX_ + 3;
 
     float t = pad->GetTopMargin();
     float l = pad->GetLeftMargin();
@@ -57,24 +47,38 @@ void CMS_lumi(TPad *pad, const std::string &rightText,
         return;
     }
 
-    float posX_ = l + relPosX * (1 - l - r);
+    float posX_ = l; // start flush with the left edge of the plot frame
     if (iPosX % 10 == 2)
         posX_ = l + 0.5 * (1 - l - r);
     else if (iPosX % 10 == 3)
         posX_ = 1 - r - relPosX * (1 - l - r);
 
-    float posY_ = 1 - t - relPosY * (1 - t - b);
+    // Same baseline as the right-hand (roll/year) title so "CMS Preliminary"
+    // sits level with it instead of lower, inside the frame.
+    float posY_ = 1 - t + lumiTextOffset * t;
+
+    // Left-aligned, bottom-anchored so "CMS" and the extra text sit side by
+    // side on that shared baseline instead of stacked.
+    const int leftBottomAlign = 11;
 
     latex.SetTextFont(cmsTextFont);
     latex.SetTextSize(cmsTextSize * t);
-    latex.SetTextAlign(align_);
+    latex.SetTextAlign(leftBottomAlign);
     latex.DrawLatex(posX_, posY_, "CMS");
+
+    // TLatex::GetXsize() needs a real font driver to measure painted text,
+    // which ROOT's batch mode (-b) doesn't have (it returns 0 there), so
+    // the "CMS" width is approximated instead: ~0.62 * textSize per
+    // character for this bold font, plus a small gap before the next word.
+    const float charWidthFactor = 0.62;
+    const float cmsWidth = charWidthFactor * cmsTextSize * t * 3; // "CMS" = 3 chars
 
     if (writeExtraText)
     {
+        const float gap = 0.012;
         latex.SetTextFont(extraTextFont);
-        latex.SetTextAlign(align_);
+        latex.SetTextAlign(leftBottomAlign);
         latex.SetTextSize(extraTextSize * t);
-        latex.DrawLatex(posX_, posY_ - relExtraDY * cmsTextSize * t, extraText.c_str());
+        latex.DrawLatex(posX_ + cmsWidth + gap, posY_, extraText.c_str());
     }
 }

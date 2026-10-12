@@ -3,6 +3,7 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TCanvas.h"
+#include "TStyle.h"
 
 TH2 *buildDiffMap(TH1 *hR, TH1 *hC, const std::string &name, const std::string &title)
 {
@@ -37,6 +38,13 @@ void drawDiffMap(TCanvas *c, TH2 *hDiff)
     c->cd();
     c->SetRightMargin(0.14); // room for the COLZ palette, not a style override
 
+    // kTemperatureMap: deep blue (-1) -> white (0) -> deep red (+1).
+    // Unlike the sequential kBird palette used for the raw efficiency maps,
+    // this has a neutral color exactly at zero, so "no change between years"
+    // reads as blank/white and the sign of the change (which year was
+    // higher) is visible at a glance from the color alone.
+    gStyle->SetPalette(kTemperatureMap);
+
     hDiff->SetTitle("");
     hDiff->GetYaxis()->SetTitle("Local y [cm]");
     hDiff->GetZaxis()->SetTitle("(Eff_{1} - Eff_{2}) / (Eff_{1} + Eff_{2})");
@@ -44,4 +52,9 @@ void drawDiffMap(TCanvas *c, TH2 *hDiff)
     hDiff->SetMaximum(1.);
 
     hDiff->Draw("COLZ");
+}
+
+void restoreEfficiencyPalette()
+{
+    gStyle->SetPalette(kBird);
 }

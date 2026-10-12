@@ -14,6 +14,14 @@ class TCanvas;
 TH2 *buildDiffMap(TH1 *hR, TH1 *hC, const std::string &name, const std::string &title);
 
 // Draws the raw 2D difference map (axis titles only) — no styling/header applied.
+// Switches the active ROOT color palette to a diverging one (blue-white-red,
+// centered at 0) for the duration of the draw, since this is a signed ratio
+// and the default sequential efficiency-map palette reads poorly for it.
 void drawDiffMap(TCanvas *c, TH2 *hDiff);
+
+// Restores the sequential palette used for the efficiency maps. Call after
+// drawDiffMap's canvas has been fully saved (SaveAs/Write), since ROOT only
+// resolves the palette at paint time.
+void restoreEfficiencyPalette();
 
 #endif

@@ -184,6 +184,7 @@ void processRoll(TKey *keyR, TDirectory *dirC,
     cDiff->Update();
     cDiff->SaveAs((outDir + diffTag + ".png").c_str());
     saveCanvasToCombinedRoot(cDiff, combinedOutFile, diffTag);
+    restoreEfficiencyPalette();
     delete hDiffMap;
 
     std::string relRatioTitle =
