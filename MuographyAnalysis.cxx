@@ -1,6 +1,5 @@
 #include "MuographyAnalysis.h"
 #include "CmsHelpers.h"
-#include "CMS_lumi.h"
 
 #include <iostream>
 #include <iomanip>
@@ -36,10 +35,7 @@ void saveCanvasToCombinedRoot(TCanvas *c, TFile *outFile, const std::string &can
         prevDir->cd();
 }
 
-void drawMuography(TCanvas *c, TH1 *h,
-                   const std::string &label,
-                   const std::string &year,
-                   const std::string &outPath)
+void drawMuography(TCanvas *c, TH1 *h)
 {
     c->cd();
     c->SetRightMargin(0.14); // room for the COLZ palette, not a style override
@@ -49,13 +45,6 @@ void drawMuography(TCanvas *c, TH1 *h,
     h->GetZaxis()->SetTitle("Efficiency [%]");
 
     h->Draw("COLZ");
-
-    CMS_lumi(c, label + "  " + getEnergyLabel(year));
-
-    c->Modified();
-    c->Update();
-
-    c->SaveAs(outPath.c_str());
 }
 
 TH1F *createAsymmetryHistogram(const std::string &sYear1,
@@ -150,7 +139,8 @@ void processRoll(TKey *keyR, TDirectory *dirC,
                  TCanvas *cR, TCanvas *cC,
                  TH1F *hmyAssymetry,
                  std::ofstream &outMeansTxt,
-                 TFile *combinedOutFile)
+                 TFile *combinedOutFile,
+                 const DecorateFn &decorate)
 {
     TClass *clR = gROOT->GetClass(keyR->GetClassName());
     if (!clR || !clR->InheritsFrom("TH1"))
@@ -169,11 +159,19 @@ void processRoll(TKey *keyR, TDirectory *dirC,
         return;
     }
 
-    drawMuography(cR, hR, safeName, sYear1, outDir + safeName + "_" + sYear1 + ".png");
+    drawMuography(cR, hR);
+    decorate(cR, safeName + "  " + getEnergyLabel(sYear1));
+    cR->Modified();
+    cR->Update();
+    cR->SaveAs((outDir + safeName + "_" + sYear1 + ".png").c_str());
     saveCanvasToCombinedRoot(cR, combinedOutFile, safeName + "_" + sYear1);
 
-    drawMuography(cC, hC, sanitizeName(extractChamberName(hC->GetName())), sYear2,
-                 outDir + safeName + "_" + sYear2 + ".png");
+    std::string safeNameC = sanitizeName(extractChamberName(hC->GetName()));
+    drawMuography(cC, hC);
+    decorate(cC, safeNameC + "  " + getEnergyLabel(sYear2));
+    cC->Modified();
+    cC->Update();
+    cC->SaveAs((outDir + safeName + "_" + sYear2 + ".png").c_str());
     saveCanvasToCombinedRoot(cC, combinedOutFile, safeName + "_" + sYear2);
 
     std::string relRatioTitle =

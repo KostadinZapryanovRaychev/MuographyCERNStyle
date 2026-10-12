@@ -78,6 +78,11 @@ void muogr_v4(const char *fileRef,
     TCanvas *cR = new TCanvas("cR", "cR", 558, 409, 900, 600);
     TCanvas *cC = new TCanvas("cC", "cC", 558, 409, 900, 600);
 
+    DecorateFn decorate = [](TCanvas *c, const std::string &rightText)
+    {
+        CMS_lumi(c, rightText);
+    };
+
     TH1F *hmyAssymetry = createAsymmetryHistogram(sYear1, sYear2);
 
     const std::string meansOutPath = outDir + "relative_diff_means_" + sVsTag + ".txt";
@@ -103,7 +108,7 @@ void muogr_v4(const char *fileRef,
         if (!processAllRolls && targetChambers.find(keyR->GetName()) == targetChambers.end())
             continue;
 
-        processRoll(keyR, dirC, outDir, sYear1, sYear2, cR, cC, hmyAssymetry, outMeansTxt, combinedOutFile);
+        processRoll(keyR, dirC, outDir, sYear1, sYear2, cR, cC, hmyAssymetry, outMeansTxt, combinedOutFile, decorate);
     }
 
     outMeansTxt.close();

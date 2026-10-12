@@ -3,6 +3,7 @@
 
 #include <string>
 #include <fstream>
+#include <functional>
 
 class TH1;
 class TH1F;
@@ -11,14 +12,17 @@ class TFile;
 class TKey;
 class TDirectory;
 
+// Applies whatever visual styling/header the caller wants to a canvas that
+// has already been drawn (e.g. CMS_lumi). Injected from outside so this
+// file has no dependency on any particular styling scheme.
+using DecorateFn = std::function<void(TCanvas *, const std::string &rightText)>;
+
 void setStats(TH1 *h, bool enable);
 
 void saveCanvasToCombinedRoot(TCanvas *c, TFile *outFile, const std::string &canvasName);
 
-void drawMuography(TCanvas *c, TH1 *h,
-                   const std::string &label,
-                   const std::string &year,
-                   const std::string &outPath);
+// Draws the raw 2D efficiency map (axis titles only) — no styling/header applied.
+void drawMuography(TCanvas *c, TH1 *h);
 
 TH1F *createAsymmetryHistogram(const std::string &sYear1,
                                const std::string &sYear2);
@@ -37,6 +41,7 @@ void processRoll(TKey *keyR, TDirectory *dirC,
                  TCanvas *cR, TCanvas *cC,
                  TH1F *hmyAssymetry,
                  std::ofstream &outMeansTxt,
-                 TFile *combinedOutFile);
+                 TFile *combinedOutFile,
+                 const DecorateFn &decorate);
 
 #endif
