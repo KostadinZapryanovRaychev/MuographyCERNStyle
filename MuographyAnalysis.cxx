@@ -1,5 +1,6 @@
 #include "MuographyAnalysis.h"
 #include "CmsHelpers.h"
+#include "CMS_lumi.h"
 
 #include <iostream>
 #include <iomanip>
@@ -12,7 +13,6 @@
 #include "TH1F.h"
 #include "TF1.h"
 #include "TCanvas.h"
-#include "TLatex.h"
 
 void setStats(TH1 *h, bool enable)
 {
@@ -42,25 +42,15 @@ void drawMuography(TCanvas *c, TH1 *h,
                    const std::string &outPath)
 {
     c->cd();
-
-    h->SetStats(false);
-
-    c->SetTopMargin(0.12);
-    c->SetRightMargin(0.15);
+    c->SetRightMargin(0.14); // room for the COLZ palette, not a style override
 
     h->SetTitle("");
     h->GetYaxis()->SetTitle("Local y [cm]");
+    h->GetZaxis()->SetTitle("Efficiency [%]");
 
     h->Draw("COLZ");
 
-    TLatex extraY;
-    extraY.SetNDC();
-    extraY.SetTextFont(42);
-    extraY.SetTextSize(0.04);
-    extraY.SetTextAngle(90);
-    extraY.DrawLatex(0.97, 0.6, "Efficiency [%]");
-
-    drawCMSHeader(label, getEnergyLabel(year));
+    CMS_lumi(c, label + "  " + getEnergyLabel(year));
 
     c->Modified();
     c->Update();

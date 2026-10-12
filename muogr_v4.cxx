@@ -1,5 +1,9 @@
 #include "CmsHelpers.h"
 #include "CmsHelpers.cxx"
+#include "tdrstyle.h"
+#include "tdrstyle.cxx"
+#include "CMS_lumi.h"
+#include "CMS_lumi.cxx"
 #include "MuographyAnalysis.h"
 #include "MuographyAnalysis.cxx"
 
@@ -25,6 +29,8 @@ void muogr_v4(const char *fileRef,
               const char *rollNamesFile = "rollNames.txt",
               const char *allRolls = "")
 {
+    setTDRStyle();
+
     const std::string outDir = "for_conference_2026/";
     const std::string sYear1 = std::string(year1);
     const std::string sYear2 = std::string(year2);
