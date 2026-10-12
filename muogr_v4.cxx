@@ -6,6 +6,8 @@
 #include "style/CMS_lumi.cxx"
 #include "MuographyAnalysis.h"
 #include "MuographyAnalysis.cxx"
+#include "DiffMap.h"
+#include "DiffMap.cxx"
 
 #include <stdio.h>
 #include <string>
@@ -77,6 +79,7 @@ void muogr_v4(const char *fileRef,
 
     TCanvas *cR = new TCanvas("cR", "cR", 558, 409, 900, 600);
     TCanvas *cC = new TCanvas("cC", "cC", 558, 409, 900, 600);
+    TCanvas *cDiff = new TCanvas("cDiff", "cDiff", 558, 409, 900, 600);
 
     DecorateFn decorate = [](TCanvas *c, const std::string &rightText)
     {
@@ -108,7 +111,7 @@ void muogr_v4(const char *fileRef,
         if (!processAllRolls && targetChambers.find(keyR->GetName()) == targetChambers.end())
             continue;
 
-        processRoll(keyR, dirC, outDir, sYear1, sYear2, cR, cC, hmyAssymetry, outMeansTxt, combinedOutFile, decorate);
+        processRoll(keyR, dirC, outDir, sYear1, sYear2, cR, cC, cDiff, hmyAssymetry, outMeansTxt, combinedOutFile, decorate);
     }
 
     outMeansTxt.close();
@@ -130,4 +133,5 @@ void muogr_v4(const char *fileRef,
     delete hmyAssymetry;
     delete cR;
     delete cC;
+    delete cDiff;
 }

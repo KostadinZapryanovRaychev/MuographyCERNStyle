@@ -1,5 +1,6 @@
 #include "MuographyAnalysis.h"
 #include "CmsHelpers.h"
+#include "DiffMap.h"
 
 #include <iostream>
 #include <iomanip>
@@ -136,7 +137,7 @@ void computeAsymmetry(TH1F *relDiff,
 void processRoll(TKey *keyR, TDirectory *dirC,
                  const std::string &outDir,
                  const std::string &sYear1, const std::string &sYear2,
-                 TCanvas *cR, TCanvas *cC,
+                 TCanvas *cR, TCanvas *cC, TCanvas *cDiff,
                  TH1F *hmyAssymetry,
                  std::ofstream &outMeansTxt,
                  TFile *combinedOutFile,
@@ -173,6 +174,17 @@ void processRoll(TKey *keyR, TDirectory *dirC,
     cC->Update();
     cC->SaveAs((outDir + safeName + "_" + sYear2 + ".png").c_str());
     saveCanvasToCombinedRoot(cC, combinedOutFile, safeName + "_" + sYear2);
+
+    std::string diffTag = safeName + "_diffMap_" + sYear1 + "vs" + sYear2;
+    TH2 *hDiffMap = buildDiffMap(hR, hC, "hDiffMap",
+                                 "(Eff(" + sYear1 + ")-Eff(" + sYear2 + "))/(Eff(" + sYear1 + ")+Eff(" + sYear2 + ")) " + safeName);
+    drawDiffMap(cDiff, hDiffMap);
+    decorate(cDiff, safeName + "  " + sYear1 + " vs " + sYear2);
+    cDiff->Modified();
+    cDiff->Update();
+    cDiff->SaveAs((outDir + diffTag + ".png").c_str());
+    saveCanvasToCombinedRoot(cDiff, combinedOutFile, diffTag);
+    delete hDiffMap;
 
     std::string relRatioTitle =
         "(Eff(" + sYear1 + ")-Eff(" + sYear2 + "))/(Eff(" + sYear1 + ")+Eff(" + sYear2 + ")) " + safeName;
