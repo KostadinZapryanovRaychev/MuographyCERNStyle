@@ -11,6 +11,7 @@ class TCanvas;
 class TFile;
 class TKey;
 class TDirectory;
+class EfficiencySummary;
 
 // Applies whatever visual styling/header the caller wants to a canvas that
 // has already been drawn (e.g. CMS_lumi). Injected from outside so this
@@ -42,6 +43,7 @@ void processRoll(TKey *keyR, TDirectory *dirC,
                  TH1F *hmyAssymetry,
                  std::ofstream &outMeansTxt,
                  TFile *combinedOutFile,
-                 const DecorateFn &decorate);
+                 const DecorateFn &decorate,
+                 EfficiencySummary *effSummary = nullptr);
 
 #endif

@@ -1,6 +1,7 @@
 #include "MuographyAnalysis.h"
 #include "CmsHelpers.h"
 #include "DiffMap.h"
+#include "EfficiencySummary.h"
 
 #include <iostream>
 #include <iomanip>
@@ -141,7 +142,8 @@ void processRoll(TKey *keyR, TDirectory *dirC,
                  TH1F *hmyAssymetry,
                  std::ofstream &outMeansTxt,
                  TFile *combinedOutFile,
-                 const DecorateFn &decorate)
+                 const DecorateFn &decorate,
+                 EfficiencySummary *effSummary)
 {
     TClass *clR = gROOT->GetClass(keyR->GetClassName());
     if (!clR || !clR->InheritsFrom("TH1"))
@@ -201,6 +203,9 @@ void processRoll(TKey *keyR, TDirectory *dirC,
     {
         outMeansTxt << safeName << " " << std::fixed << std::setprecision(5)
                     << myMean << std::endl;
+
+        if (effSummary)
+            effSummary->fillRoll(keyR->GetName(), myMean);
     }
 
     double fractionOne = 9.;

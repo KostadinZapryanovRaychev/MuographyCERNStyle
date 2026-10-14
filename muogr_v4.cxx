@@ -8,9 +8,12 @@
 #include "MuographyAnalysis.cxx"
 #include "DiffMap.h"
 #include "DiffMap.cxx"
+#include "EfficiencySummary.h"
+#include "EfficiencySummary.cxx"
 
 #include <stdio.h>
 #include <string>
+#include <cstring>
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
@@ -29,7 +32,8 @@ void muogr_v4(const char *fileRef,
               const char *year1 = "2018",
               const char *year2 = "2025",
               const char *rollNamesFile = "rollNames.txt",
-              const char *allRolls = "")
+              const char *allRolls = "",
+              const char *gridTemplateFile = "files/SummaryAnalyzeEfficiency_402653_RPCMon2026.root")
 {
     setTDRStyle();
 
@@ -86,6 +90,27 @@ void muogr_v4(const char *fileRef,
         CMS_lumi(c, rightText);
     };
 
+    EfficiencySummary *effSummary = nullptr;
+    if (gridTemplateFile && strlen(gridTemplateFile) > 0)
+    {
+        if (gSystem->AccessPathName(gridTemplateFile))
+        {
+            std::cerr << "WARNING: efficiency-grid template not found, skipping grid summary: "
+                      << gridTemplateFile << std::endl;
+        }
+        else
+        {
+            effSummary = new EfficiencySummary(gridTemplateFile);
+            if (!effSummary->isValid())
+            {
+                std::cerr << "WARNING: efficiency-grid template had no usable histograms, skipping grid summary"
+                          << std::endl;
+                delete effSummary;
+                effSummary = nullptr;
+            }
+        }
+    }
+
     TH1F *hmyAssymetry = createAsymmetryHistogram(sYear1, sYear2);
 
     const std::string meansOutPath = outDir + "relative_diff_means_" + sVsTag + ".txt";
@@ -111,11 +136,19 @@ void muogr_v4(const char *fileRef,
         if (!processAllRolls && targetChambers.find(keyR->GetName()) == targetChambers.end())
             continue;
 
-        processRoll(keyR, dirC, outDir, sYear1, sYear2, cR, cC, cDiff, hmyAssymetry, outMeansTxt, combinedOutFile, decorate);
+        processRoll(keyR, dirC, outDir, sYear1, sYear2, cR, cC, cDiff, hmyAssymetry, outMeansTxt, combinedOutFile, decorate, effSummary);
     }
 
     outMeansTxt.close();
     std::cout << "Per-roll mean relative differences written to " << meansOutPath << std::endl;
+
+    if (effSummary)
+    {
+        const std::string gridOutPath = outDir + "relative_efficiency_summary_" + sVsTag + ".root";
+        effSummary->save(gridOutPath);
+        delete effSummary;
+        std::cout << "Relative efficiency summary grid written to " << gridOutPath << std::endl;
+    }
 
     if (combinedOutFile)
     {
