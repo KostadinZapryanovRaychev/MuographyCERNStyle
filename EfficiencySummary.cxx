@@ -10,6 +10,15 @@
 namespace
 {
 
+// The signed relative difference (aR - aC) / (aR + aC) is bounded by
+// [-1, +1] in theory, but real per-roll values cluster tightly around 0
+// (typically within +-0.15) — only a couple of bad Gaussian fits ever
+// reach the extremes. Scaling the palette to +-1 crushes all real signal
+// into an invisible sliver near white; +-0.15 shows the real spread while
+// still clamping (and thereby flagging) those rare bad-fit outliers to
+// full red/green.
+const double kGridScaleLimit = 0.15;
+
 std::vector<std::string> splitByUnderscore(const std::string &s)
 {
     std::vector<std::string> tokens;
@@ -83,11 +92,11 @@ EfficiencySummary::EfficiencySummary(const std::string &templateFile)
         TH2F *h = (TH2F *)src->Clone(("FiducialCutEffW" + std::to_string(wheel)).c_str());
         h->Reset();
         h->SetDirectory(nullptr);
-        // Signed relative difference: -1 = efficiency improved the most
-        // (good), 0 = no change (neutral), +1 = efficiency dropped the
-        // most (bad).
-        h->SetMinimum(-1.);
-        h->SetMaximum(1.);
+        // Signed relative difference: negative = efficiency improved
+        // (good), 0 = no change (neutral), positive = efficiency dropped
+        // (bad). See kGridScaleLimit for why the range isn't +-1.
+        h->SetMinimum(-kGridScaleLimit);
+        h->SetMaximum(kGridScaleLimit);
         barrel_[wheel] = h;
     }
 
@@ -103,8 +112,8 @@ EfficiencySummary::EfficiencySummary(const std::string &templateFile)
         TH2F *h = (TH2F *)src->Clone(("FiducialCutEffD" + std::to_string(disk)).c_str());
         h->Reset();
         h->SetDirectory(nullptr);
-        h->SetMinimum(-1.);
-        h->SetMaximum(1.);
+        h->SetMinimum(-kGridScaleLimit);
+        h->SetMaximum(kGridScaleLimit);
         endcap_[disk] = h;
     }
 
