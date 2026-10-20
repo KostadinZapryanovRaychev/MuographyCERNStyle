@@ -18,6 +18,7 @@ to produce the standard `FiducialCutEffW<wheel>` grid plots and `RE<disk>_plot` 
 same plots, same CMS styling, but showing `|meanRelDiff|` instead of raw efficiency.
 
 That macro was adjusted locally (not part of this repo — it's a separately downloaded copy) for this use:
+
 - z-axis title changed to `"Relative Efficiency Difference"`.
 - Color gradient flipped: green at 0 (identical efficiency, good), red/yellow at 1 (maximally different, bad) — opposite of the original efficiency convention (where high = good = green).
 - Draw option changed from `"colztext"`/`"colztext89"` to `"colz"` (color only, no per-bin numbers).
@@ -25,6 +26,7 @@ That macro was adjusted locally (not part of this repo — it's a separately dow
 ```bash
 root -l -b -q 'drawEfficiencyHistograms.C(false, false, 1, "for_conference_2026/relative_efficiency_summary_2018vs2025.root")'
 ```
+
 (run from inside `OfflineRPCEfficiency-master/DQM/RPCMonitorModule/macros/`; `b_ch`/`b_ch2 = false` skip the optional
 chamber-issue overlay, which needs a `bChambers.root` we don't have.)
 
@@ -51,7 +53,9 @@ root -l -b -q 'muogr_v4.cxx("files/AnalyzeEfficiency_321475_325172_RPCMon_2018D.
 ```
 
 If you don't use CMSSW, any LCG view with ROOT works instead, e.g.:
+
 ```bash
 source /cvmfs/sft.cern.ch/lcg/views/LCG_105/x86_64-el9-gcc13-opt/setup.sh
 ```
+
 (pick an LCG release available on lxplus via `ls /cvmfs/sft.cern.ch/lcg/views/`).

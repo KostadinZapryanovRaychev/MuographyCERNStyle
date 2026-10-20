@@ -10,15 +10,6 @@
 namespace
 {
 
-// The signed relative difference (aR - aC) / (aR + aC) is bounded by
-// [-1, +1] in theory, but real per-roll values cluster tightly around 0
-// (typically within +-0.15) — only a couple of bad Gaussian fits ever
-// reach the extremes. Scaling the palette to +-1 crushes all real signal
-// into an invisible sliver near white; +-0.15 shows the real spread while
-// still clamping (and thereby flagging) those rare bad-fit outliers to
-// full red/green.
-const double kGridScaleLimit = 0.15;
-
 std::vector<std::string> splitByUnderscore(const std::string &s)
 {
     std::vector<std::string> tokens;
@@ -84,19 +75,23 @@ EfficiencySummary::EfficiencySummary(const std::string &templateFile)
 
     for (int wheel = -2; wheel <= 2; wheel++)
     {
-        std::string name = "Barrel/FiducialCutEffW" + std::to_string(wheel);
+        // TotalEff, not FiducialCutEff: we don't apply any geometric
+        // fiducial cut ourselves, so borrowing the fiducial-cut grid's
+        // name/title would misrepresent the methodology.
+        std::string name = "Barrel/TotalEffW" + std::to_string(wheel);
         TH2F *src = (TH2F *)f->Get(name.c_str());
         if (!src)
             continue;
 
-        TH2F *h = (TH2F *)src->Clone(("FiducialCutEffW" + std::to_string(wheel)).c_str());
+        TH2F *h = (TH2F *)src->Clone(("TotalEffW" + std::to_string(wheel)).c_str());
         h->Reset();
         h->SetDirectory(nullptr);
+        h->SetTitle("CMS Preliminary");
         // Signed relative difference: negative = efficiency improved
         // (good), 0 = no change (neutral), positive = efficiency dropped
-        // (bad). See kGridScaleLimit for why the range isn't +-1.
-        h->SetMinimum(-kGridScaleLimit);
-        h->SetMaximum(kGridScaleLimit);
+        // (bad).
+        h->SetMinimum(-1.);
+        h->SetMaximum(1.);
         barrel_[wheel] = h;
     }
 
@@ -104,16 +99,17 @@ EfficiencySummary::EfficiencySummary(const std::string &templateFile)
     {
         if (disk == 0)
             continue;
-        std::string name = "Endcap/FiducialCutEffD" + std::to_string(disk);
+        std::string name = "Endcap/TotalEffD" + std::to_string(disk);
         TH2F *src = (TH2F *)f->Get(name.c_str());
         if (!src)
             continue;
 
-        TH2F *h = (TH2F *)src->Clone(("FiducialCutEffD" + std::to_string(disk)).c_str());
+        TH2F *h = (TH2F *)src->Clone(("TotalEffD" + std::to_string(disk)).c_str());
         h->Reset();
         h->SetDirectory(nullptr);
-        h->SetMinimum(-kGridScaleLimit);
-        h->SetMaximum(kGridScaleLimit);
+        h->SetTitle("CMS Preliminary");
+        h->SetMinimum(-1.);
+        h->SetMaximum(1.);
         endcap_[disk] = h;
     }
 
