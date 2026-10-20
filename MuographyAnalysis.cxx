@@ -17,6 +17,7 @@
 #include "TCanvas.h"
 #include "TPaveStats.h"
 #include "TStyle.h"
+#include "TGaxis.h"
 
 void setStats(TH1 *h, bool enable)
 {
@@ -73,6 +74,13 @@ void drawRelDiff1D(TCanvas *c, TH1F *h)
     h->SetFillColor(kBlue + 1);
 
     h->Draw();
+
+    // Large aggregated entry counts (millions, for the per-wheel/disk
+    // histograms) make ROOT draw the y-axis in "x10^N" scientific form,
+    // with the common-exponent label normally sitting at the top-left of
+    // the pad — right where the CMS logo goes. Nudge it down out of the
+    // way instead of disabling scientific notation.
+    TGaxis::SetExponentOffset(0.02, -0.07, "y");
     c->Update();
 
     TPaveStats *st = (TPaveStats *)h->FindObject("stats");

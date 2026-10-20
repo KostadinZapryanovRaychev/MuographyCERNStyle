@@ -98,23 +98,27 @@ void RelDiffByWheelDisk::save(const std::string &outDir, TFile *outFile, TCanvas
 {
     for (auto &kv : barrel_)
     {
+        std::string label = "Wheel " + std::to_string(kv.first);
         drawRelDiff1D(c, kv.second);
-        decorate(c, "Wheel " + std::to_string(kv.first) + "  " + sYear1_ + " vs " + sYear2_);
+        decorate(c, label + "  " + sYear1_ + " vs " + sYear2_);
         c->Modified();
         c->Update();
         std::string tag = std::string(kv.second->GetName()) + "_" + sYear1_ + "vs" + sYear2_;
         c->SaveAs((outDir + tag + ".png").c_str());
+        c->SaveAs((outDir + tag + ".root").c_str());
         saveCanvasToCombinedRoot(c, outFile, tag);
     }
 
     for (auto &kv : endcap_)
     {
+        std::string label = "Disk " + std::to_string(kv.first);
         drawRelDiff1D(c, kv.second);
-        decorate(c, "Disk " + std::to_string(kv.first) + "  " + sYear1_ + " vs " + sYear2_);
+        decorate(c, label + "  " + sYear1_ + " vs " + sYear2_);
         c->Modified();
         c->Update();
         std::string tag = std::string(kv.second->GetName()) + "_" + sYear1_ + "vs" + sYear2_;
         c->SaveAs((outDir + tag + ".png").c_str());
+        c->SaveAs((outDir + tag + ".root").c_str());
         saveCanvasToCombinedRoot(c, outFile, tag);
     }
 }
