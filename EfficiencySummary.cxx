@@ -86,7 +86,13 @@ EfficiencySummary::EfficiencySummary(const std::string &templateFile)
         TH2F *h = (TH2F *)src->Clone(("TotalEffW" + std::to_string(wheel)).c_str());
         h->Reset();
         h->SetDirectory(nullptr);
-        h->SetTitle("CMS Preliminary");
+        // Empty, not "CMS Preliminary": the real header text is drawn by
+        // CMS_lumi() in drawEfficiencyHistograms.C. Leaving a non-empty
+        // title here risks ROOT auto-painting it as a second, overlapping
+        // title box whenever OptTitle isn't 0 yet (e.g. the very first
+        // paint in a fresh session that reopens the saved .root file,
+        // before our embedded TExec has had a chance to disable it).
+        h->SetTitle("");
         // Signed relative difference: negative = efficiency improved
         // (good), 0 = no change (neutral), positive = efficiency dropped
         // (bad).
@@ -107,7 +113,7 @@ EfficiencySummary::EfficiencySummary(const std::string &templateFile)
         TH2F *h = (TH2F *)src->Clone(("TotalEffD" + std::to_string(disk)).c_str());
         h->Reset();
         h->SetDirectory(nullptr);
-        h->SetTitle("CMS Preliminary");
+        h->SetTitle("");
         h->SetMinimum(-1.);
         h->SetMaximum(1.);
         endcap_[disk] = h;
