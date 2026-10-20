@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <sstream>
-#include <cmath>
 
 #include "TFile.h"
 #include "TH2.h"
@@ -84,8 +83,10 @@ EfficiencySummary::EfficiencySummary(const std::string &templateFile)
         TH2F *h = (TH2F *)src->Clone(("FiducialCutEffW" + std::to_string(wheel)).c_str());
         h->Reset();
         h->SetDirectory(nullptr);
-        // |relative difference|: 0 = identical efficiency (good), 1 = maximally different (bad).
-        h->SetMinimum(0.);
+        // Signed relative difference: -1 = efficiency improved the most
+        // (good), 0 = no change (neutral), +1 = efficiency dropped the
+        // most (bad).
+        h->SetMinimum(-1.);
         h->SetMaximum(1.);
         barrel_[wheel] = h;
     }
@@ -102,7 +103,7 @@ EfficiencySummary::EfficiencySummary(const std::string &templateFile)
         TH2F *h = (TH2F *)src->Clone(("FiducialCutEffD" + std::to_string(disk)).c_str());
         h->Reset();
         h->SetDirectory(nullptr);
-        h->SetMinimum(0.);
+        h->SetMinimum(-1.);
         h->SetMaximum(1.);
         endcap_[disk] = h;
     }
@@ -201,15 +202,13 @@ void EfficiencySummary::fillRoll(const std::string &rawRollName, double value)
     if (tokens.empty() || tokens[0] != "Muography" || tokens.size() < 2)
         return;
 
-    // |relative difference|: 0 = identical efficiency (good), 1 = maximally
-    // different (bad) — the sign (which year was higher) isn't meaningful
-    // here, only how far from zero.
-    double absValue = std::fabs(value);
-
+    // Signed relative difference (aR - aC) / (aR + aC): negative means
+    // year2 was more efficient than year1 (improvement, good), positive
+    // means year1 was more efficient (efficiency dropped, bad).
     if (tokens[1].size() > 0 && tokens[1][0] == 'W')
-        fillBarrelRoll(tokens, absValue);
+        fillBarrelRoll(tokens, value);
     else if (tokens[1].size() > 1 && tokens[1][0] == 'R' && tokens[1][1] == 'E')
-        fillEndcapRoll(tokens, absValue);
+        fillEndcapRoll(tokens, value);
 }
 
 void EfficiencySummary::save(const std::string &outPath) const
