@@ -2,6 +2,7 @@
 #include "CmsHelpers.h"
 #include "DiffMap.h"
 #include "EfficiencySummary.h"
+#include "RelDiffByWheelDisk.h"
 
 #include <iostream>
 #include <iomanip>
@@ -14,6 +15,8 @@
 #include "TH1F.h"
 #include "TF1.h"
 #include "TCanvas.h"
+#include "TPaveStats.h"
+#include "TStyle.h"
 
 void setStats(TH1 *h, bool enable)
 {
@@ -30,6 +33,7 @@ void saveCanvasToCombinedRoot(TCanvas *c, TFile *outFile, const std::string &can
 
     outFile->cd();
     TCanvas *cClone = (TCanvas *)c->Clone(canvasName.c_str());
+    cClone->SetName(canvasName.c_str()); // TCanvas::Clone() ignores the newname argument
     cClone->Write();
     delete cClone;
 
@@ -47,6 +51,38 @@ void drawMuography(TCanvas *c, TH1 *h)
     h->GetZaxis()->SetTitle("Efficiency [%]");
 
     h->Draw("COLZ");
+}
+
+void drawRelDiff1D(TCanvas *c, TH1F *h)
+{
+    c->cd();
+
+    // Drop the attached Gaussian fit (curve + fit-parameter stat box) so
+    // this shows the raw distribution with a plain Entries/Mean/Std Dev
+    // box, not the fit result — the fit itself is only used elsewhere to
+    // get the per-roll mean. These gStyle settings are left in place
+    // (not restored) — this is the only histogram in the pipeline that
+    // uses stats/fit display, and reverting them before the canvas's
+    // final repaint (after decorate() runs) was repainting the stats box
+    // with the old settings and making it vanish.
+    h->GetListOfFunctions()->Clear();
+    gStyle->SetOptFit(0);
+    gStyle->SetOptStat(1111); // Entries, Mean, Std Dev
+
+    h->SetStats(true);
+    h->SetFillColor(kBlue + 1);
+
+    h->Draw();
+    c->Update();
+
+    TPaveStats *st = (TPaveStats *)h->FindObject("stats");
+    if (st)
+    {
+        st->SetX1NDC(0.70);
+        st->SetX2NDC(0.90);
+        st->SetY1NDC(0.55);
+        st->SetY2NDC(0.75);
+    }
 }
 
 TH1F *createAsymmetryHistogram(const std::string &sYear1,
@@ -138,12 +174,13 @@ void computeAsymmetry(TH1F *relDiff,
 void processRoll(TKey *keyR, TDirectory *dirC,
                  const std::string &outDir,
                  const std::string &sYear1, const std::string &sYear2,
-                 TCanvas *cR, TCanvas *cC, TCanvas *cDiff,
+                 TCanvas *cR, TCanvas *cC, TCanvas *cDiff, TCanvas *cRelDiff1D,
                  TH1F *hmyAssymetry,
                  std::ofstream &outMeansTxt,
                  TFile *combinedOutFile,
                  const DecorateFn &decorate,
-                 EfficiencySummary *effSummary)
+                 EfficiencySummary *effSummary,
+                 RelDiffByWheelDisk *relDiffAgg)
 {
     TClass *clR = gROOT->GetClass(keyR->GetClassName());
     if (!clR || !clR->InheritsFrom("TH1"))
@@ -210,6 +247,17 @@ void processRoll(TKey *keyR, TDirectory *dirC,
 
     double fractionOne = 9.;
     computeAsymmetry(myRelDiff1D, hmyAssymetry, fractionOne);
+
+    std::string relDiff1DTag = safeName + "_relDiff1D_" + sYear1 + "vs" + sYear2;
+    drawRelDiff1D(cRelDiff1D, myRelDiff1D);
+    decorate(cRelDiff1D, safeName + "  " + sYear1 + " vs " + sYear2);
+    cRelDiff1D->Modified();
+    cRelDiff1D->Update();
+    cRelDiff1D->SaveAs((outDir + relDiff1DTag + ".png").c_str());
+    saveCanvasToCombinedRoot(cRelDiff1D, combinedOutFile, relDiff1DTag);
+
+    if (relDiffAgg)
+        relDiffAgg->addRoll(keyR->GetName(), myRelDiff1D);
 
     delete hR;
     delete myRelDiff1D;

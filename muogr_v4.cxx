@@ -10,6 +10,8 @@
 #include "DiffMap.cxx"
 #include "EfficiencySummary.h"
 #include "EfficiencySummary.cxx"
+#include "RelDiffByWheelDisk.h"
+#include "RelDiffByWheelDisk.cxx"
 
 #include <stdio.h>
 #include <string>
@@ -84,6 +86,7 @@ void muogr_v4(const char *fileRef,
     TCanvas *cR = new TCanvas("cR", "cR", 558, 409, 900, 600);
     TCanvas *cC = new TCanvas("cC", "cC", 558, 409, 900, 600);
     TCanvas *cDiff = new TCanvas("cDiff", "cDiff", 558, 409, 900, 600);
+    TCanvas *cRelDiff1D = new TCanvas("cRelDiff1D", "cRelDiff1D", 558, 409, 900, 600);
 
     DecorateFn decorate = [](TCanvas *c, const std::string &rightText)
     {
@@ -111,6 +114,8 @@ void muogr_v4(const char *fileRef,
         }
     }
 
+    RelDiffByWheelDisk relDiffAgg(sYear1, sYear2);
+
     TH1F *hmyAssymetry = createAsymmetryHistogram(sYear1, sYear2);
 
     const std::string meansOutPath = outDir + "relative_diff_means_" + sVsTag + ".txt";
@@ -136,7 +141,7 @@ void muogr_v4(const char *fileRef,
         if (!processAllRolls && targetChambers.find(keyR->GetName()) == targetChambers.end())
             continue;
 
-        processRoll(keyR, dirC, outDir, sYear1, sYear2, cR, cC, cDiff, hmyAssymetry, outMeansTxt, combinedOutFile, decorate, effSummary);
+        processRoll(keyR, dirC, outDir, sYear1, sYear2, cR, cC, cDiff, cRelDiff1D, hmyAssymetry, outMeansTxt, combinedOutFile, decorate, effSummary, &relDiffAgg);
     }
 
     outMeansTxt.close();
@@ -149,6 +154,9 @@ void muogr_v4(const char *fileRef,
         delete effSummary;
         std::cout << "Relative efficiency summary grid written to " << gridOutPath << std::endl;
     }
+
+    relDiffAgg.save(outDir, combinedOutFile, cRelDiff1D, decorate);
+    std::cout << "Per-wheel/per-disk relative-difference distributions written to " << outDir << std::endl;
 
     if (combinedOutFile)
     {
@@ -167,4 +175,5 @@ void muogr_v4(const char *fileRef,
     delete cR;
     delete cC;
     delete cDiff;
+    delete cRelDiff1D;
 }
